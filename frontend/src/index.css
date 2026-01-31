@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+body{
+    @apply bg-gray-100
+}
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button { 
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    margin: 0; 
+}
+
+.signup{
+    background-image: url("./assets/accountSignupBanner.jpg");
+}
+
+
+@theme {
+    --color-primary: #2699FA;
+    --spacing-horizontal: 20rem; 
+}

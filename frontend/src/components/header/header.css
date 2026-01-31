@@ -1,0 +1,13 @@
+@reference "../../index.css";
+
+.icon{
+  @apply size-9 cursor-pointer text-red-400
+}
+
+.navElem{
+  @apply py-6
+}
+
+.footerIcon {
+  @apply size-7 cursor-pointer 
+}

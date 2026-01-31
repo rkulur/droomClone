@@ -1,0 +1,58 @@
+{
+  "keyMappings": "# Insert your preferred key mappings here.\nunmap H\nmap H previousTab\nunmap L\nmap L nextTab",
+  "settingsVersion": "2.3.1",
+  "exclusionRules": [
+    {
+      "passKeys": "",
+      "pattern": "https?://mail.google.com/*"
+    },
+    {
+      "passKeys": "",
+      "pattern": "https?://docs.google.com/*"
+    },
+    {
+      "passKeys": "",
+      "pattern": "https?://www.photopea.com/*"
+    },
+    {
+      "passKeys": "",
+      "pattern": "https?://monkeytype.com/*"
+    },
+    {
+      "passKeys": "",
+      "pattern": "https?://www.canva.com/*"
+    },
+    {
+      "passKeys": "",
+      "pattern": "https?://www.typing.com/*"
+    },
+    {
+      "passKeys": "",
+      "pattern": "https?://excalidraw.com/*"
+    },
+    {
+      "passKeys": "",
+      "pattern": "https?://abc.digilocker.gov.in/*"
+    },
+    {
+      "passKeys": "",
+      "pattern": "https?://abc.digilocker.gov.in/*"
+    },
+    {
+      "passKeys": "",
+      "pattern": "https?://10fastfingers.com/*"
+    },
+    {
+      "passKeys": "",
+      "pattern": "https?://localhost:3000/*"
+    },
+    {
+      "passKeys": "",
+      "pattern": "https?://app.todoist.com/*"
+    },
+    {
+      "passKeys": "",
+      "pattern": "https?://leetcode.com/*"
+    }
+  ]
+}
