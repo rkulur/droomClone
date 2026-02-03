@@ -2,6 +2,7 @@ import { useState } from "react";
 import { CiLocationOn } from "react-icons/ci";
 import { vehicleCategories } from "../../../const/vehicleCategories";
 import Button from "../../../utility/Button";
+import Underline from "../../../utility/Underline";
 
 const VehicleSearchForm = () => {
   const [currCategory, setCurrCategory] = useState(vehicleCategories[0].name);
@@ -22,7 +23,7 @@ const VehicleSearchForm = () => {
         <p className="text-2xl">Your Requirements, Our Mission</p>
         <p className="text-xl text-gray-400">Your Perfect Vehicle Awaits</p>
         <div className="flex justify-center">
-          <div className=" bg-linear-to-r from-lime-400 to-cyan-700 h-1 rounded-full w-1/6"></div>
+          <Underline className="w-1/6"/>
         </div>
       </div>
       <div className="flex flex-col">
