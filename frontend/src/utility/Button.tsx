@@ -1,3 +1,5 @@
+import clsx from "clsx";
+import { twMerge } from "tailwind-merge";
 
 type ButtonProps = {
   title: string;
@@ -8,7 +10,12 @@ type ButtonProps = {
 const Button = ({ title, className, handleClick }: ButtonProps) => {
   return (
     <div
-      className={`${className ?? ""} w-full px-6 py-4 rounded bg-[#2699FA] text-white cursor-pointer active:scale-[98%] transition-all text-center`}
+      className={twMerge(
+        clsx(
+          "w-full px-6 py-4 rounded bg-[#2699FA] text-white cursor-pointer active:scale-[98%] transition-all text-center",
+          className,
+        ),
+      )}
       onClick={handleClick}
     >
       {title}
