@@ -8,7 +8,7 @@ const ShopByBrand = () => {
   const brandType = ["Car", "Bike", "Scooter"] as const;
   type BrandType = (typeof brandType)[number];
   const [selectedBrandType, setSelectedBrandType] = useState<BrandType>("Car");
-  const [brandsList, setBrandsList] = useState<Brand[]>(bikeBrands);
+  const [brandsList, setBrandsList] = useState<Brand[]>(carBrands);
 
   return (
     <div className="px-horizontal pb-12 bg-white">

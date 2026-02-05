@@ -3,6 +3,13 @@ import { CiLocationOn } from "react-icons/ci";
 import { vehicleCategories } from "../../../const/vehicleCategories";
 import Button from "../../../utility/Button";
 import Underline from "../../../utility/Underline";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "../../ui/carousel";
 
 const VehicleSearchForm = () => {
   const [currCategory, setCurrCategory] = useState(vehicleCategories[0].name);
@@ -23,7 +30,7 @@ const VehicleSearchForm = () => {
         <p className="text-2xl">Your Requirements, Our Mission</p>
         <p className="text-xl text-gray-400">Your Perfect Vehicle Awaits</p>
         <div className="flex justify-center">
-          <Underline className="w-1/6"/>
+          <Underline className="w-1/6" />
         </div>
       </div>
       <div className="flex flex-col">
@@ -40,25 +47,30 @@ const VehicleSearchForm = () => {
       </div>
       <div>
         <p className="text-center text-xl mb-4">What are you looking for?*</p>
-        <div className="flex gap-5 absolute left-0 px-2">
-          {vehicleCategories.map((category, idx) => (
-            <div
-              key={idx}
-              className={`flex flex-col rounded-2xl w-20 h-20 aspect-square items-center justify-center ${currCategory === category.name ? "border border-primary bg-white" : "bg-gray-200"}`}
-              onClick={() => handleCategorySelection(idx)}
-            >
-              <category.icon
-                size={30}
-                className={`${currCategory === category.name ? "text-primary" : "text-gray-600"}`}
-              />
-              <p
-                className={`${currCategory === category.name && "text-primary"}`}
-              >
-                {category.name}
-              </p>
-            </div>
-          ))}
-        </div>
+
+        <Carousel className="flex gap-5 absolute left-0 px-7 select-none">
+          <CarouselContent>
+            {vehicleCategories.map((category, idx) => (
+              <CarouselItem className="basis-1/5">
+                <div
+                  key={idx}
+                  className={`cursor-pointer flex flex-col rounded-2xl w-full h-full aspect-square items-center justify-center ${currCategory === category.name ? "border border-primary bg-white" : "bg-gray-200"}`}
+                  onClick={() => handleCategorySelection(idx)}
+                >
+                  <category.icon
+                    size={30}
+                    className={`${currCategory === category.name ? "text-primary" : "text-gray-600"}`}
+                  />
+                  <p
+                    className={`${currCategory === category.name && "text-primary"}`}
+                  >
+                    {category.name}
+                  </p>
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+        </Carousel>
       </div>
       <div className="flex flex-col gap-3">
         <p className="text-center font-medium mt-20">

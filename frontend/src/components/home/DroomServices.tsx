@@ -69,7 +69,7 @@ const DroomServices = () => {
               <p className="font-medium text-lg">{service.title}</p>
               <img src={service.iconSrc} />
             </div>
-            <div className="flex text-sm items-center justify-between">
+            <div className="flex text-sm items-center justify-between w-full">
               <img src={service.poweredBySrc} alt="Powered by Obv" />
               <div>
                 {service.features.map((feature, fIdx) => (

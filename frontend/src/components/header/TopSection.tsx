@@ -37,7 +37,9 @@ const TopSection = () => {
 
   return (
     <div className="flex justify-between py-4 border-b border-gray-300 px-horizontal">
-      <img src={logo} className="cursor-pointer" alt="logo" />
+      <Link to="/">
+        <img src={logo} className="cursor-pointer" alt="logo" />
+      </Link>
       <div className="flex w-2/3 gap-8  py-2 relative">
         <Input />
         <SelectLocation />
