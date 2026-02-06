@@ -1,8 +1,8 @@
 import clsx from "clsx";
-import Underline from "../../utility/Underline";
 import { useState } from "react";
 import { Link } from "react-router";
 import { bikeBrands, carBrands, type Brand } from "../../const/brands";
+import Underline from "../../utility/Underline";
 
 const ShopByBrand = () => {
   const brandType = ["Car", "Bike", "Scooter"] as const;

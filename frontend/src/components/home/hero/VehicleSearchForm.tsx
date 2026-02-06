@@ -6,9 +6,7 @@ import Underline from "../../../utility/Underline";
 import {
   Carousel,
   CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
+  CarouselItem
 } from "../../ui/carousel";
 
 const VehicleSearchForm = () => {

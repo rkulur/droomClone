@@ -1,6 +1,6 @@
-import Underline from "../../utility/Underline";
-import { automobileCenter } from "../../const/automobileCenter";
 import { Link } from "react-router";
+import { automobileCenter } from "../../const/automobileCenter";
+import Underline from "../../utility/Underline";
 
 const AutomobileCenter = () => {
   return (

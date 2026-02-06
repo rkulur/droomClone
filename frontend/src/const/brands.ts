@@ -16,6 +16,7 @@ import kia from "../assets/home/brand/car/kia.webp";
 import lamborghini from "../assets/home/brand/car/lamborgini.webp";
 import landRover from "../assets/home/brand/car/land_rover.webp";
 import lexus from "../assets/home/brand/car/lexus.webp";
+import mahindra from "../assets/home/brand/car/mahindra.webp";
 import maserati from "../assets/home/brand/car/maserati.webp";
 import mclaren from "../assets/home/brand/car/mclaren.webp";
 import mercedesBenz from "../assets/home/brand/car/mercedes_benz.webp";
@@ -31,7 +32,6 @@ import tata from "../assets/home/brand/car/tata.webp";
 import toyota from "../assets/home/brand/car/toyota.webp";
 import volkswagen from "../assets/home/brand/car/volkswagen.webp";
 import volvo from "../assets/home/brand/car/volvo.webp";
-import mahindra from "../assets/home/brand/car/mahindra.webp";
 
 import aprilia from "../assets/home/brand/bike/aprillia.webp";
 import ather from "../assets/home/brand/bike/ather.webp";

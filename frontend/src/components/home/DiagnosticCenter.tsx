@@ -1,34 +1,8 @@
-import type { IconType } from "react-icons";
-import { AiOutlineSync } from "react-icons/ai";
-import { BiTargetLock } from "react-icons/bi";
-import { FaAtom, FaBalanceScale } from "react-icons/fa";
-import { HiSparkles } from "react-icons/hi";
+import { droomFeatures } from "../../const/droomFeatures";
 import Underline from "../../utility/Underline";
 import DroomServices from "./DroomServices";
 
 const DiagnosticCenter = () => {
-  const droomFeatures: { icon: IconType; name: string }[] = [
-    {
-      icon: HiSparkles,
-      name: "Independent",
-    },
-    {
-      icon: BiTargetLock,
-      name: "Objective",
-    },
-    {
-      icon: FaBalanceScale,
-      name: "Unbiased",
-    },
-    {
-      icon: FaAtom,
-      name: "Scientific",
-    },
-    {
-      icon: AiOutlineSync,
-      name: "Comprehensive",
-    },
-  ];
   return (
     <div className="pb-12 bg-white">
       <div className="w-fit px-horizontal ">

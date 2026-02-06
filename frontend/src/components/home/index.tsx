@@ -1,4 +1,4 @@
-import AnciliaryServiceCenter from "./AnciliaryServiceCenter";
+import AncilaryServiceCenter from "./AncilaryServiceCenter";
 import AutomobileCenter from "./AutomobileCenter";
 import DealsAndPromotions from "./DealsAndPromotions";
 import DiagnosticCenter from "./DiagnosticCenter";
@@ -14,7 +14,7 @@ const Home = () => {
       <ShopByBrand />
       <DiagnosticCenter />
       <DealsAndPromotions />
-      <AnciliaryServiceCenter />
+      <AncilaryServiceCenter />
     </div>
   );
 };
