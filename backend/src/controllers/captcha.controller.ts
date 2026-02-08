@@ -1,35 +1,20 @@
 import { Request, Response } from "express";
 import svgCaptcha from "svg-captcha";
 import { CaptchaResponse, CaptchaVerificationResult } from "../interfaces";
+import { getCaptcha, verifyCaptcha } from "../services/captcha.services";
+import { CaptchaRequest } from "../interfaces/captcha.interface";
 
-const captchaStore = new Map<string, string>();
 
-export const getCaptcha = (_: Request, res: Response<CaptchaResponse>) => {
-  const captcha = svgCaptcha.create();
-  const captchaId = crypto.randomUUID();
-
-  captchaStore.set(captchaId, captcha.text);
-
-  res.send({
-    captchaId,
-    captchaSvg: captcha.data,
-  });
+export const generateCaptcha = (_: Request, res: Response<CaptchaResponse>) => {
+  const captcha = getCaptcha();
+  res.send(captcha);
 };
 
-export const verifyCaptcha = (captchaId: string, captchaText: string): CaptchaVerificationResult => {
-  if (!captchaStore.has(captchaId)) {
-    return {success: false, message: "Captcha ID not found"};
+export const captchaVerification = (req: Request<{}, {}, CaptchaRequest>, res: Response)=> {
+  const {captchaId, captchaText} = req.body;
+  const result = verifyCaptcha(captchaId, captchaText);
+  if(!result.success){
+    res.status(400);
   }
-
-  const storedCaptchaText = captchaStore.get(captchaId);
-  if (storedCaptchaText !== captchaText) {
-    return {success: false, message: "Captcha text does not match"};
-  }
-
-  captchaStore.delete(captchaId);
-
-  return {
-    success: true,
-    message: "Captcha verified successfully"
-}
+  res.json(result);
 };
