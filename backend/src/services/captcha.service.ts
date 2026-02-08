@@ -20,7 +20,6 @@ export const generateCaptcha = (): CaptchaResponse => {
     expiresIn: Date.now() + 1000 * 60 * 2,
   });
 
-  console.log(captchaId);
 
   return {
     captchaId,
@@ -62,6 +61,6 @@ export const verifyCaptcha = (
   };
 };
 
-function hashedText(text: string) {
+export function hashedText(text: string) {
   return crypto.createHash("sha256").update(text.toLowerCase()).digest("hex");
 }
