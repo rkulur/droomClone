@@ -1,3 +1,8 @@
+export interface CaptchaStore{
+    captchaText: string;
+    captchaSvg: string;
+    expiresIn: number;
+}
 
 export interface CaptchaResponse {
     captchaId: string;
