@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import svgCaptcha from "svg-captcha";
 import { CaptchaResponse, CaptchaVerificationResult } from "../interfaces";
 import { CaptchaStore } from "../interfaces/captcha.interface";
+import jwt from "jsonwebtoken"
 
 const captchaStore = new Map<string, CaptchaStore>();
 
@@ -21,6 +22,7 @@ export const generateCaptcha = (): CaptchaResponse => {
   });
 
 
+  console.log(captcha.text)
   return {
     captchaId,
     captchaSvg: captcha.data,
@@ -34,12 +36,12 @@ export const verifyCaptcha = (
   const storedCaptcha = captchaStore.get(captchaId);
 
   if (!storedCaptcha) {
-    return { success: false, message: "Invalid captcha id" };
+    return { success: false, message: "Invalid captcha id", captchaToken: null };
   }
 
   if (storedCaptcha.expiresIn < Date.now()) {
     captchaStore.delete(captchaId);
-    return { success: false, message: "Captcha expired" };
+    return { success: false, message: "Captcha expired", captchaToken: null };
   }
 
   const hashedCaptchaText = hashedText(captchaText);
@@ -50,14 +52,22 @@ export const verifyCaptcha = (
   );
 
   if (!isMatch) {
-    return { success: false, message: "Captcha text does not match" };
+    return { success: false, message: "Captcha text does not match", captchaToken: null };
   }
 
   captchaStore.delete(captchaId);
 
+  const secret = process.env.JWT_SECRET;
+
+  if(!secret){
+    throw new Error("JWT_SECRET environment variable is not set");
+  }
+  const captchaToken = jwt.sign({ captchaId }, secret, { expiresIn: "10m" });
+
   return {
     success: true,
     message: "Captcha verified successfully",
+    captchaToken,
   };
 };
 

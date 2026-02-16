@@ -1,16 +1,16 @@
 import { Request, Response } from "express";
-import { OtpRequest, SignInRequest } from "../interfaces";
 import jwt from "jsonwebtoken";
-import { generateOtp, sendEmailOtp } from "../services/otp.service";
+import crypto from "node:crypto";
+import { OtpRequest, SignInRequest } from "../interfaces";
 import { OtpModel } from "../models/otp.model";
 import { hashedText } from "../services/captcha.service";
-import crypto from "node:crypto";
+import { generateOtp, sendEmailOtp } from "../services/otp.service";
 
 export const getOtp = async (
   req: Request<{}, {}, OtpRequest>,
   res: Response,
 ) => {
-  const { email, captchaVerifiedToken } = req.body;
+  const { email, captchaVerifiedToken, phoneNumber } = req.body;
 
   if (!captchaVerifiedToken) {
     return res.status(400).json({
@@ -19,7 +19,16 @@ export const getOtp = async (
     });
   }
 
-  jwt.verify(captchaVerifiedToken, process.env.JWT_TOKEN, (err) => {
+  const secret = process.env.JWT_SECRET;
+
+  if (!secret) {
+    return res.status(500).json({
+      success: false,
+      message: "Server configuration error",
+    });
+  }
+
+  jwt.verify(captchaVerifiedToken, secret, (err) => {
     if (err) {
       return res.status(400).json({
         success: false,
@@ -39,10 +48,11 @@ export const getOtp = async (
 
   await OtpModel.create({
     email,
-    phoneNumber: "",
+    phoneNumber,
     otpHash: hashedText(otp),
     expiresIn: new Date(Date.now() + 2 * 60 * 1000),
   });
+  console.log(otp)
 
   return res.json({ success: true, message: "OTP sent successfully" });
 };

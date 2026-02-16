@@ -1,8 +1,9 @@
 import { Router } from "express";
-import { getOtp } from "../controllers/otp.controller";
+import { getOtp, verifyOtp } from "../controllers/otp.controller";
 
 const router = Router();
 
-router.get("/", getOtp);
+router.post("/", getOtp);
+router.post("/verify", verifyOtp)
 
 export { router };

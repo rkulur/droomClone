@@ -1,10 +1,30 @@
+import axios, { type AxiosResponse } from "axios";
+import { useEffect, useState } from "react";
 import { IoReload } from "react-icons/io5";
 import { Link } from "react-router";
 import Button from "../../utility/Button";
 
 const SignInForm = () => {
+  const [svg, setSvg] = useState<string>("");
+  const [reload, setReload] = useState<boolean>(false);
+
+  useEffect(() => {
+    const BASE_URL = "http://localhost:3000";
+    const getCaptcha = async () => {
+      const res = await axios.get<
+        {},
+        AxiosResponse<{ captchaId: string; captchaSvg: string }>
+      >(`${BASE_URL}/captcha`);
+      const { captchaId, captchaSvg } = res.data;
+      setSvg(captchaSvg);
+      localStorage.setItem("captchaId", captchaId);
+    };
+
+    getCaptcha();
+  }, [reload]);
+
   return (
-    <div className="rounded-md overflow-hidden w-5/8">
+    <div className="rounded-md overflow-hidden w-5/8 select-none">
       <div className="bg-primary flex text-white font-medium flex-col place-items-center py-4">
         <p>Looks like you are new here!</p>
         <p>Sign up to get started</p>
@@ -42,11 +62,19 @@ const SignInForm = () => {
               className="outline-none px-2 w-full placeholder:text-sm py-2"
               placeholder="Enter the captcha here"
             />
-            <div className="flex place-items-center bg-gray-300 px-2">
+            <div
+              onClick={() => setReload(!reload)}
+              className="flex place-items-center bg-gray-300 px-2 cursor-pointer"
+            >
               <IoReload />
             </div>
           </div>
-          <div className="flex-1 border">captcha</div>
+          <div className="flex-1">
+            <div
+              dangerouslySetInnerHTML={{ __html: svg }}
+              className="w-full"
+            ></div>
+          </div>
         </div>
         <div className="text-sm">
           <p>By creating an account you agree to our </p>
