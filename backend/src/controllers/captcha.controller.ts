@@ -19,6 +19,7 @@ export const captchaVerification = (
   req: Request<{}, {}, CaptchaRequest>,
   res: Response,
 ) => {
+  console.log(req)
   const { captchaId, captchaText } = req.body;
   const result = verifyCaptcha(captchaId, captchaText);
   if (!result.success) {

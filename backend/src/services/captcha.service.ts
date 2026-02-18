@@ -9,7 +9,7 @@ const captchaStore = new Map<string, CaptchaStore>();
 export const generateCaptcha = (): CaptchaResponse => {
   const captcha = svgCaptcha.create({
     size: 6,
-    noise: 15,
+    noise: 5,
     color: true,
   });
   const captchaId = crypto.randomUUID();

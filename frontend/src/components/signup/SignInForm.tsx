@@ -1,15 +1,18 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import axios, { type AxiosResponse } from "axios";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState, type BaseSyntheticEvent } from "react";
+import { useForm } from "react-hook-form";
 import { IoReload } from "react-icons/io5";
 import { Link } from "react-router";
-import Button from "../../utility/Button";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { verifyCaptcha } from "../../api/auth.api";
 import { loginSchema, type LoginData } from "../../schema/Login.schema";
+import Button from "../../utility/Button";
+import { debounce } from "../../utility/debounce";
 
 const SignInForm = () => {
   const [svg, setSvg] = useState<string>("");
   const [reload, setReload] = useState<boolean>(false);
+  const [captchaValid, setCaptchaValid] = useState(false);
 
   const {
     register,
@@ -25,6 +28,38 @@ const SignInForm = () => {
     reset();
   };
 
+  const handleCaptcha = async (e: BaseSyntheticEvent<HTMLInputElement>[]) => {
+    const captchaText = e[0].target.value;
+    const captchaId = localStorage.getItem("captchaId");
+
+    if (!captchaId) {
+      console.log("Invalid captcha, retry with another captcha");
+      return;
+    }
+
+    const res = await verifyCaptcha({
+      captchaText,
+      captchaId,
+    });
+
+    const { success } = res.data;
+
+    if (!success) {
+      console.log(res.data.message);
+      return;
+    }
+
+    setCaptchaValid(true);
+
+    console.log(res.data.message);
+    cookieStore.set("captchaToken", res.data.captchaToken);
+  };
+
+  const debouncedHandleCaptcha = useMemo(
+    () => debounce(handleCaptcha, 300),
+    [],
+  );
+
   useEffect(() => {
     const BASE_URL = "http://localhost:3000";
     const getCaptcha = async () => {
@@ -37,7 +72,9 @@ const SignInForm = () => {
       localStorage.setItem("captchaId", captchaId);
     };
 
-    getCaptcha();
+    if (!captchaValid) {
+      getCaptcha();
+    }
   }, [reload]);
 
   return (
@@ -88,8 +125,13 @@ const SignInForm = () => {
             <input
               type="text"
               className="outline-none px-2 w-full placeholder:text-sm py-2"
+              disabled={captchaValid}
               placeholder="Enter the captcha here"
-              {...register("captcha")}
+              {...register("captcha", {
+                onChange: (e) => {
+                  debouncedHandleCaptcha(e);
+                },
+              })}
             />
             <div
               onClick={() => setReload(!reload)}
