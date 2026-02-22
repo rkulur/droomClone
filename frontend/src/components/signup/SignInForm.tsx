@@ -1,13 +1,16 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios, { type AxiosResponse } from "axios";
-import { useEffect, useMemo, useState, type BaseSyntheticEvent } from "react";
+import { isAxiosError } from "axios";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { IoReload } from "react-icons/io5";
 import { Link } from "react-router";
-import { verifyCaptcha } from "../../api/auth.api";
+import {
+  getCaptcha,
+  verifyCaptcha,
+  type VerifyCaptchaResponse,
+} from "../../api/auth.api";
 import { loginSchema, type LoginData } from "../../schema/Login.schema";
 import Button from "../../utility/Button";
-import { debounce } from "../../utility/debounce";
 
 const SignInForm = () => {
   const [svg, setSvg] = useState<string>("");
@@ -17,64 +20,71 @@ const SignInForm = () => {
   const {
     register,
     handleSubmit,
+    setError,
+    clearErrors,
     reset,
     formState: { errors },
   } = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
+    criteriaMode: "all",
+    mode: "onChange",
   });
 
-  const onSubmit = (data: LoginData) => {
-    console.log(data);
-    reset();
-  };
-
-  const handleCaptcha = async (e: BaseSyntheticEvent<HTMLInputElement>[]) => {
-    const captchaText = e[0].target.value;
+  const handleCaptchaVerification = async (captcha: string) => {
     const captchaId = localStorage.getItem("captchaId");
 
     if (!captchaId) {
-      console.log("Invalid captcha, retry with another captcha");
+      setError("captcha", {
+        type: "noCaptchaId",
+        message: "Captcha expired. Please reload.",
+      });
       return;
     }
 
-    const res = await verifyCaptcha({
-      captchaText,
-      captchaId,
-    });
+    try {
+      const res = await verifyCaptcha({
+        captchaText: captcha,
+        captchaId,
+      });
 
-    const { success } = res.data;
+      const { captchaToken } = res.data;
 
-    if (!success) {
-      console.log(res.data.message);
-      return;
+      setCaptchaValid(true);
+      cookieStore.set("captchaToken", captchaToken);
+    } catch (err) {
+      if (isAxiosError(err)) {
+        const { success, message } = err.response
+          ?.data as VerifyCaptchaResponse;
+
+        if (!success) {
+          setCaptchaValid(false);
+          setError("captcha", {
+            type: "invalidCaptcha",
+            message: message || "Invalid captcha",
+          });
+          return;
+        }
+
+        clearErrors("captcha");
+      }
     }
-
-    setCaptchaValid(true);
-
-    console.log(res.data.message);
-    cookieStore.set("captchaToken", res.data.captchaToken);
   };
 
-  const debouncedHandleCaptcha = useMemo(
-    () => debounce(handleCaptcha, 300),
-    [],
-  );
+  const onSubmit = async (data: LoginData) => {
+    const { captcha } = data;
+    await handleCaptchaVerification(captcha);
+  };
 
   useEffect(() => {
-    const BASE_URL = "http://localhost:3000";
-    const getCaptcha = async () => {
-      const res = await axios.get<
-        {},
-        AxiosResponse<{ captchaId: string; captchaSvg: string }>
-      >(`${BASE_URL}/captcha`);
-      const { captchaId, captchaSvg } = res.data;
-      setSvg(captchaSvg);
-      localStorage.setItem("captchaId", captchaId);
-    };
-
-    if (!captchaValid) {
-      getCaptcha();
+    if (captchaValid) {
+      return;
     }
+
+    (async () => {
+      const { captchaId, captchaSvg } = await getCaptcha();
+      localStorage.setItem("captchaId", captchaId);
+      setSvg(captchaSvg);
+    })();
   }, [reload]);
 
   return (
@@ -127,11 +137,7 @@ const SignInForm = () => {
               className="outline-none px-2 w-full placeholder:text-sm py-2"
               disabled={captchaValid}
               placeholder="Enter the captcha here"
-              {...register("captcha", {
-                onChange: (e) => {
-                  debouncedHandleCaptcha(e);
-                },
-              })}
+              {...register("captcha")}
             />
             <div
               onClick={() => setReload(!reload)}
