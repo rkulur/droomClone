@@ -6,11 +6,11 @@ import { OtpModel } from "../models/otp.model";
 import { hashedText } from "../services/captcha.service";
 import { generateOtp, sendEmailOtp } from "../services/otp.service";
 
-export const getOtp = async (
+export const sendOtp = async (
   req: Request<{}, {}, OtpRequest>,
   res: Response,
 ) => {
-  const { email, captchaVerifiedToken, phoneNumber } = req.body;
+  const { email, captchaVerifiedToken } = req.body;
 
   if (!captchaVerifiedToken) {
     return res.status(400).json({
@@ -38,7 +38,7 @@ export const getOtp = async (
   });
 
   const otp = generateOtp();
-  const { success } = sendEmailOtp(email, otp);
+  const { success } = await sendEmailOtp(email, otp);
 
   if (!success) {
     return res
@@ -48,11 +48,10 @@ export const getOtp = async (
 
   await OtpModel.create({
     email,
-    phoneNumber,
     otpHash: hashedText(otp),
     expiresIn: new Date(Date.now() + 2 * 60 * 1000),
   });
-  console.log(otp)
+  console.log(otp);
 
   return res.json({ success: true, message: "OTP sent successfully" });
 };

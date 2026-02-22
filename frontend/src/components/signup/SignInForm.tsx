@@ -6,16 +6,20 @@ import { IoReload } from "react-icons/io5";
 import { Link } from "react-router";
 import {
   getCaptcha,
+  sendOtp,
   verifyCaptcha,
   type VerifyCaptchaResponse,
 } from "../../api/auth.api";
 import { loginSchema, type LoginData } from "../../schema/Login.schema";
 import Button from "../../utility/Button";
+import { InputOTPForm } from "./OTP";
 
 const SignInForm = () => {
   const [svg, setSvg] = useState<string>("");
   const [reload, setReload] = useState<boolean>(false);
   const [captchaValid, setCaptchaValid] = useState(false);
+  const [email, setEmail] = useState<string | null>(null);
+  const [otp, setOtp] = useState<string>("");
 
   const {
     register,
@@ -70,9 +74,21 @@ const SignInForm = () => {
     }
   };
 
+  const handleOtpVerification = async () => {};
+
   const onSubmit = async (data: LoginData) => {
     const { captcha } = data;
+    setEmail(data.email);
     await handleCaptchaVerification(captcha);
+    const token = await cookieStore.get("captchaToken");
+    const captchaVerifiedToken = token?.value;
+
+    if (!captchaVerifiedToken) {
+      alert("Captcha verification failed. Please try again.");
+      return;
+    }
+
+    await sendOtp(data.email, captchaVerifiedToken);
   };
 
   useEffect(() => {
@@ -170,6 +186,18 @@ const SignInForm = () => {
           Existing user? Log in
         </Link>
       </form>
+      {true && email && (
+        <div className="border h-full absolute w-full top-0 left-0 bg-dim">
+          <div className="absolute left-2/5 top-1/4 z-10">
+            <InputOTPForm
+              email={email}
+              otp={otp}
+              setOtp={setOtp}
+              handleOtpVerification={handleOtpVerification}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
