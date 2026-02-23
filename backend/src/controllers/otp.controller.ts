@@ -10,7 +10,7 @@ export const sendOtp = async (
   req: Request<{}, {}, OtpRequest>,
   res: Response,
 ) => {
-  const { email, captchaVerifiedToken } = req.body;
+  const { email, phoneNumber, captchaVerifiedToken } = req.body;
 
   if (!captchaVerifiedToken) {
     return res.status(400).json({
@@ -48,6 +48,7 @@ export const sendOtp = async (
 
   await OtpModel.create({
     email,
+    phoneNumber,
     otpHash: hashedText(otp),
     expiresIn: new Date(Date.now() + 2 * 60 * 1000),
   });
@@ -61,6 +62,14 @@ export const verifyOtp = async (
   res: Response,
 ) => {
   const { email, otp } = req.body;
+  const secret = process.env.JWT_SECRET;
+
+  if (!secret) {
+    return res.status(500).json({
+      success: false,
+      message: "Server configuration error",
+    });
+  }
 
   const otpDoc = await OtpModel.findOne({ email });
 
@@ -91,7 +100,15 @@ export const verifyOtp = async (
     });
   }
 
-  await OtpModel.deleteOne({ email });
+  const otpVerifiedToken = jwt.sign(
+    { otpId: otpDoc._id.toString(), purpose: "register" },
+    secret,
+    { expiresIn: "10m" },
+  );
 
-  return res.json({ success: true, message: "OTP verified successfully" });
+  return res.json({
+    success: true,
+    message: "OTP verified successfully",
+    otpVerifiedToken,
+  });
 };

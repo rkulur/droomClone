@@ -1,6 +1,7 @@
 import express from "express";
 import { captchaRouter, otpRouter, userRouter } from "./routes";
 import cors from "cors";
+import { router } from "./routes/user.routes";
 
 const app = express();
 

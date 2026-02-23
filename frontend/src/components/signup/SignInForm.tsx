@@ -5,10 +5,12 @@ import { useForm } from "react-hook-form";
 import { IoReload } from "react-icons/io5";
 import { Link } from "react-router";
 import {
+  type ApiResponse,
   getCaptcha,
+  registerUser,
   sendOtp,
+  verifyOtp,
   verifyCaptcha,
-  type VerifyCaptchaResponse,
 } from "../../api/auth.api";
 import { loginSchema, type LoginData } from "../../schema/Login.schema";
 import Button from "../../utility/Button";
@@ -18,8 +20,10 @@ const SignInForm = () => {
   const [svg, setSvg] = useState<string>("");
   const [reload, setReload] = useState<boolean>(false);
   const [captchaValid, setCaptchaValid] = useState(false);
-  const [email, setEmail] = useState<string | null>(null);
   const [otp, setOtp] = useState<string>("");
+  const [pendingSignup, setPendingSignup] = useState<{
+    email: string;
+  } | null>(null);
 
   const {
     register,
@@ -33,6 +37,25 @@ const SignInForm = () => {
     criteriaMode: "all",
     mode: "onChange",
   });
+
+  const getErrorMessage = (err: unknown, fallback: string) => {
+    if (!isAxiosError(err)) {
+      return fallback;
+    }
+
+    return (err.response?.data as ApiResponse | undefined)?.message || fallback;
+  };
+
+  const getFirstNameFromEmail = (userEmail: string) => {
+    const localPart = userEmail.split("@")[0]?.trim() || "";
+    const normalized = localPart.replace(/[^a-zA-Z]/g, "");
+
+    if (!normalized) {
+      return "User";
+    }
+
+    return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+  };
 
   const handleCaptchaVerification = async (captcha: string) => {
     const captchaId = localStorage.getItem("captchaId");
@@ -54,41 +77,86 @@ const SignInForm = () => {
       const { captchaToken } = res.data;
 
       setCaptchaValid(true);
-      cookieStore.set("captchaToken", captchaToken);
+      clearErrors("captcha");
+      return captchaToken;
     } catch (err) {
-      if (isAxiosError(err)) {
-        const { success, message } = err.response
-          ?.data as VerifyCaptchaResponse;
-
-        if (!success) {
-          setCaptchaValid(false);
-          setError("captcha", {
-            type: "invalidCaptcha",
-            message: message || "Invalid captcha",
-          });
-          return;
-        }
-
-        clearErrors("captcha");
-      }
+      const message = getErrorMessage(err, "Invalid captcha");
+      setCaptchaValid(false);
+      setError("captcha", {
+        type: "invalidCaptcha",
+        message,
+      });
+      return null;
     }
   };
 
-  const handleOtpVerification = async () => {};
+  const handleOtpVerification = async () => {
+    if (!pendingSignup) {
+      alert("Signup details not found. Please try again.");
+      return;
+    }
+
+    if (otp.length !== 6) {
+      alert("Please enter a valid 6-digit OTP.");
+      return;
+    }
+
+    try {
+      const otpRes = await verifyOtp(pendingSignup.email, otp);
+      const { success, message, otpVerifiedToken } = otpRes;
+
+      if (!success) {
+        alert(message || "OTP verification failed.");
+        return;
+      }
+      if (!otpVerifiedToken) {
+        alert("OTP token missing. Please request OTP again.");
+        return;
+      }
+
+      const registerRes = await registerUser({
+        firstName: getFirstNameFromEmail(pendingSignup.email),
+        email: pendingSignup.email,
+        otpVerifiedToken,
+      });
+
+      if (!registerRes.success) {
+        alert(registerRes.message || "User registration failed.");
+        return;
+      }
+
+      alert(registerRes.message || message || "Account created successfully.");
+      setOtp("");
+      setPendingSignup(null);
+      setCaptchaValid(false);
+      reset();
+      setReload((prev) => !prev);
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, "OTP verification or registration failed."));
+    }
+  };
 
   const onSubmit = async (data: LoginData) => {
-    const { captcha } = data;
-    setEmail(data.email);
-    await handleCaptchaVerification(captcha);
-    const token = await cookieStore.get("captchaToken");
-    const captchaVerifiedToken = token?.value;
+    const captchaVerifiedToken = await handleCaptchaVerification(data.captcha);
 
     if (!captchaVerifiedToken) {
       alert("Captcha verification failed. Please try again.");
       return;
     }
 
-    await sendOtp(data.email, captchaVerifiedToken);
+    try {
+      const otpRes = await sendOtp(data.email, captchaVerifiedToken);
+      if (!otpRes.success) {
+        alert(otpRes.message || "Failed to send OTP. Please try again.");
+        return;
+      }
+
+      setPendingSignup({
+        email: data.email,
+      });
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, "Failed to send OTP. Please try again."));
+    }
   };
 
   useEffect(() => {
@@ -186,11 +254,11 @@ const SignInForm = () => {
           Existing user? Log in
         </Link>
       </form>
-      {true && email && (
+      {pendingSignup && (
         <div className="border h-full absolute w-full top-0 left-0 bg-dim">
           <div className="absolute left-2/5 top-1/4 z-10">
             <InputOTPForm
-              email={email}
+              email={pendingSignup.email}
               otp={otp}
               setOtp={setOtp}
               handleOtpVerification={handleOtpVerification}

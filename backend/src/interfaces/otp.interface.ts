@@ -1,5 +1,5 @@
 export interface OtpRequest {
   email: string;
-  phoneNumber: string;
+  phoneNumber?: string;
   captchaVerifiedToken: string;
 }

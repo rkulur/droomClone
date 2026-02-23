@@ -5,14 +5,20 @@ export interface VerifyCaptchaResponse {
   message: string;
   captchaToken: string;
 }
+
+export interface ApiResponse {
+  success: boolean;
+  message: string;
+}
+
 export interface CaptchaResponse {
   captchaId: string;
   captchaSvg: string;
 }
-export type verifyOtpResponse = {
-  success: boolean;
-  message: string;
-};
+
+export interface VerifyOtpResponse extends ApiResponse {
+  otpVerifiedToken: string;
+}
 
 export const login = (data: LoginData) => axiosInstance.post("/login", data);
 
@@ -27,7 +33,7 @@ export const getCaptcha = async () => {
 };
 
 export const sendOtp = async (email: string, captchaVerifiedToken: string) => {
-  const res = await axiosInstance.post("otp", {
+  const res = await axiosInstance.post<ApiResponse>("otp", {
     email,
     captchaVerifiedToken,
   });
@@ -35,9 +41,18 @@ export const sendOtp = async (email: string, captchaVerifiedToken: string) => {
 };
 
 export const verifyOtp = async (email: string, otp: string) => {
-  const res = await axiosInstance.post<VerifyCaptchaResponse>("otp/verify", {
+  const res = await axiosInstance.post<VerifyOtpResponse>("otp/verify", {
     email,
     otp,
   });
+  return res.data;
+};
+
+export const registerUser = async (data: {
+  firstName: string;
+  email: string;
+  otpVerifiedToken: string;
+}) => {
+  const res = await axiosInstance.post<ApiResponse>("user/register", data);
   return res.data;
 };

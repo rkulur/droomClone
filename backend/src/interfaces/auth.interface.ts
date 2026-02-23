@@ -1,5 +1,5 @@
 export interface SignInRequest {
   email: string;
-  phoneNumber: string;
+  phoneNumber?: string;
   otp: string;
 }
