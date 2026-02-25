@@ -22,6 +22,14 @@ export interface VerifyOtpResponse extends ApiResponse {
 
 export const login = (data: LoginData) => axiosInstance.post("/login", data);
 
+export const loginWithVerifiedToken = async (data: {
+  email: string;
+  otpVerifiedToken: string;
+}) => {
+  const res = await axiosInstance.post<ApiResponse>("/user/login", data);
+  return res.data;
+};
+
 export const verifyCaptcha = (data: {
   captchaId: string;
   captchaText: string;
@@ -40,6 +48,13 @@ export const sendOtp = async (email: string, captchaVerifiedToken: string) => {
   return res.data;
 };
 
+export const sendLoginOtp = async (email: string) => {
+  const res = await axiosInstance.post<ApiResponse>("otp/send-login-otp", {
+    email,
+  });
+  return res.data;
+};
+
 export const verifyOtp = async (email: string, otp: string) => {
   const res = await axiosInstance.post<VerifyOtpResponse>("otp/verify", {
     email,
@@ -50,6 +65,8 @@ export const verifyOtp = async (email: string, otp: string) => {
 
 export const registerUser = async (data: {
   firstName: string;
+  lastName: string;
+  password: string;
   email: string;
   otpVerifiedToken: string;
 }) => {

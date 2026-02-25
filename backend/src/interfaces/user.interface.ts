@@ -9,3 +9,8 @@ export interface RegisterUserRequest {
   avatarUrl?: string;
   otpVerifiedToken: string;
 }
+
+export interface LoginUserRequest {
+  email: string;
+  otpVerifiedToken: string;
+}

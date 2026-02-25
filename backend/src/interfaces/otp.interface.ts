@@ -3,3 +3,8 @@ export interface OtpRequest {
   phoneNumber?: string;
   captchaVerifiedToken: string;
 }
+
+export interface LoginOtpRequest {
+  email: string;
+  phoneNumber?: string;
+}

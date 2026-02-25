@@ -1,12 +1,99 @@
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import { RegisterUserRequest } from "../interfaces";
-import { OtpModel } from "../models/otp.model";
+import type mongoose from "mongoose";
+import { LoginUserRequest, RegisterUserRequest } from "../interfaces";
+import { OtpModel, type OtpType } from "../models/otp.model";
 import { UserModel } from "../models/user.model";
 
 type OtpVerificationTokenPayload = {
   otpId?: string;
   purpose?: string;
+};
+
+type OtpDoc = mongoose.HydratedDocument<OtpType>;
+
+type OtpValidationResult =
+  | { ok: true; otpDoc: OtpDoc }
+  | {
+      ok: false;
+      status: number;
+      response: { success: false; message: string };
+    };
+
+const validateOtpVerifiedToken = async (
+  otpVerifiedToken: string,
+  email: string,
+): Promise<OtpValidationResult> => {
+  const secret = process.env.JWT_SECRET;
+
+  if (!secret) {
+    return {
+      ok: false,
+      status: 500,
+      response: { success: false, message: "Server configuration error" },
+    };
+  }
+
+  let decoded: OtpVerificationTokenPayload;
+
+  try {
+    decoded = jwt.verify(otpVerifiedToken, secret) as OtpVerificationTokenPayload;
+  } catch {
+    return {
+      ok: false,
+      status: 400,
+      response: {
+        success: false,
+        message: "Invalid or expired OTP verification token",
+      },
+    };
+  }
+
+  if (
+    !decoded.otpId ||
+    !decoded.purpose ||
+    !["register", "login"].includes(decoded.purpose)
+  ) {
+    return {
+      ok: false,
+      status: 400,
+      response: {
+        success: false,
+        message: "Invalid OTP verification token payload",
+      },
+    };
+  }
+
+  const otpDoc = (await OtpModel.findById(decoded.otpId)) as OtpDoc | null;
+
+  if (!otpDoc) {
+    return {
+      ok: false,
+      status: 400,
+      response: { success: false, message: "OTP record not found" },
+    };
+  }
+
+  if (otpDoc.expiresIn < new Date()) {
+    return {
+      ok: false,
+      status: 400,
+      response: { success: false, message: "OTP has expired" },
+    };
+  }
+
+  if (otpDoc.email.toLowerCase() !== email.toLowerCase()) {
+    return {
+      ok: false,
+      status: 400,
+      response: {
+        success: false,
+        message: "OTP token does not match the provided email",
+      },
+    };
+  }
+
+  return { ok: true, otpDoc };
 };
 
 export const registerUser = async (
@@ -30,54 +117,15 @@ export const registerUser = async (
     });
   }
 
-  const secret = process.env.JWT_SECRET;
+  const otpValidationResult = await validateOtpVerifiedToken(otpVerifiedToken, email);
 
-  if (!secret) {
-    return res.status(500).json({
-      success: false,
-      message: "Server configuration error",
-    });
+  if (!otpValidationResult.ok) {
+    return res
+      .status(otpValidationResult.status)
+      .json(otpValidationResult.response);
   }
 
-  let decoded: OtpVerificationTokenPayload;
-  try {
-    decoded = jwt.verify(otpVerifiedToken, secret) as OtpVerificationTokenPayload;
-  } catch {
-    return res.status(400).json({
-      success: false,
-      message: "Invalid or expired OTP verification token",
-    });
-  }
-
-  if (!decoded.otpId || decoded.purpose !== "register") {
-    return res.status(400).json({
-      success: false,
-      message: "Invalid OTP verification token payload",
-    });
-  }
-
-  const otpDoc = await OtpModel.findById(decoded.otpId);
-
-  if (!otpDoc) {
-    return res.status(400).json({
-      success: false,
-      message: "OTP record not found",
-    });
-  }
-
-  if (otpDoc.expiresIn < new Date()) {
-    return res.status(400).json({
-      success: false,
-      message: "OTP has expired",
-    });
-  }
-
-  if (otpDoc.email.toLowerCase() !== email.toLowerCase()) {
-    return res.status(400).json({
-      success: false,
-      message: "OTP token does not match the provided email",
-    });
-  }
+  const { otpDoc } = otpValidationResult;
 
   if (otpDoc.phoneNumber && phoneNumber && otpDoc.phoneNumber !== phoneNumber) {
     return res.status(400).json({
@@ -113,6 +161,48 @@ export const registerUser = async (
   return res.status(201).json({
     success: true,
     message: "User registered successfully",
+    user,
+  });
+};
+
+export const loginUser = async (
+  req: Request<{}, {}, LoginUserRequest>,
+  res: Response,
+) => {
+  const { email, otpVerifiedToken } = req.body;
+
+  if (!email || !otpVerifiedToken) {
+    return res.status(400).json({
+      success: false,
+      message: "email and otpVerifiedToken are required",
+    });
+  }
+
+  const otpValidationResult = await validateOtpVerifiedToken(otpVerifiedToken, email);
+
+  if (!otpValidationResult.ok) {
+    return res
+      .status(otpValidationResult.status)
+      .json(otpValidationResult.response);
+  }
+
+  const user = await UserModel.findOne({ email: email.toLowerCase() });
+
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: "User not found",
+    });
+  }
+
+  user.lastLoginAt = new Date();
+  await user.save();
+
+  await OtpModel.deleteOne({ _id: otpValidationResult.otpDoc._id });
+
+  return res.status(200).json({
+    success: true,
+    message: "Login successful",
     user,
   });
 };

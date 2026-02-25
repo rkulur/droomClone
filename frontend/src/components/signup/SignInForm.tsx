@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { IoReload } from "react-icons/io5";
 import { Link } from "react-router";
+import { z } from "zod";
 import {
   type ApiResponse,
   getCaptcha,
@@ -16,6 +17,20 @@ import { loginSchema, type LoginData } from "../../schema/Login.schema";
 import Button from "../../utility/Button";
 import { InputOTPForm } from "./OTP";
 
+const registerDetailsSchema = z
+  .object({
+    firstName: z.string().trim().min(1, "First name is required"),
+    lastName: z.string().trim().min(1, "Last name is required"),
+    password: z.string().min(8, "Password must be at least 8 characters"),
+    confirmPassword: z.string().min(1, "Confirm password is required"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    path: ["confirmPassword"],
+    message: "Passwords do not match",
+  });
+
+type RegisterDetailsData = z.infer<typeof registerDetailsSchema>;
+
 const SignInForm = () => {
   const [svg, setSvg] = useState<string>("");
   const [reload, setReload] = useState<boolean>(false);
@@ -23,6 +38,7 @@ const SignInForm = () => {
   const [otp, setOtp] = useState<string>("");
   const [pendingSignup, setPendingSignup] = useState<{
     email: string;
+    otpVerifiedToken?: string;
   } | null>(null);
 
   const {
@@ -46,16 +62,16 @@ const SignInForm = () => {
     return (err.response?.data as ApiResponse | undefined)?.message || fallback;
   };
 
-  const getFirstNameFromEmail = (userEmail: string) => {
-    const localPart = userEmail.split("@")[0]?.trim() || "";
-    const normalized = localPart.replace(/[^a-zA-Z]/g, "");
-
-    if (!normalized) {
-      return "User";
-    }
-
-    return normalized.charAt(0).toUpperCase() + normalized.slice(1);
-  };
+  const {
+    register: registerDetails,
+    handleSubmit: handleRegisterSubmit,
+    formState: { errors: registerErrors },
+    reset: resetRegisterDetails,
+  } = useForm<RegisterDetailsData>({
+    resolver: zodResolver(registerDetailsSchema),
+    criteriaMode: "all",
+    mode: "onChange",
+  });
 
   const handleCaptchaVerification = async (captcha: string) => {
     const captchaId = localStorage.getItem("captchaId");
@@ -114,10 +130,29 @@ const SignInForm = () => {
         return;
       }
 
-      const registerRes = await registerUser({
-        firstName: getFirstNameFromEmail(pendingSignup.email),
+      setPendingSignup({
         email: pendingSignup.email,
         otpVerifiedToken,
+      });
+      alert(message || "OTP verified successfully.");
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, "OTP verification failed."));
+    }
+  };
+
+  const onRegisterSubmit = async (data: RegisterDetailsData) => {
+    if (!pendingSignup?.otpVerifiedToken) {
+      alert("OTP verification required. Please verify OTP first.");
+      return;
+    }
+
+    try {
+      const registerRes = await registerUser({
+        firstName: data.firstName,
+        lastName: data.lastName,
+        password: data.password,
+        email: pendingSignup.email,
+        otpVerifiedToken: pendingSignup.otpVerifiedToken,
       });
 
       if (!registerRes.success) {
@@ -125,14 +160,15 @@ const SignInForm = () => {
         return;
       }
 
-      alert(registerRes.message || message || "Account created successfully.");
+      alert(registerRes.message || "Account created successfully.");
       setOtp("");
       setPendingSignup(null);
       setCaptchaValid(false);
       reset();
+      resetRegisterDetails();
       setReload((prev) => !prev);
     } catch (err: unknown) {
-      alert(getErrorMessage(err, "OTP verification or registration failed."));
+      alert(getErrorMessage(err, "User registration failed."));
     }
   };
 
@@ -257,12 +293,81 @@ const SignInForm = () => {
       {pendingSignup && (
         <div className="border h-full absolute w-full top-0 left-0 bg-dim">
           <div className="absolute left-2/5 top-1/4 z-10">
-            <InputOTPForm
-              email={pendingSignup.email}
-              otp={otp}
-              setOtp={setOtp}
-              handleOtpVerification={handleOtpVerification}
-            />
+            {!pendingSignup.otpVerifiedToken ? (
+              <InputOTPForm
+                email={pendingSignup.email}
+                otp={otp}
+                setOtp={setOtp}
+                handleOtpVerification={handleOtpVerification}
+              />
+            ) : (
+              <form
+                className="bg-white rounded-md p-6 w-[26rem] flex flex-col gap-4"
+                onSubmit={handleRegisterSubmit(onRegisterSubmit)}
+              >
+                <h3 className="text-lg font-medium text-center">
+                  Complete Registration
+                </h3>
+                <div>
+                  <input
+                    type="text"
+                    placeholder="First name"
+                    className="w-full border-none outline-none text-base px-4 py-2"
+                    {...registerDetails("firstName")}
+                  />
+                  <div className="h-[1.2px] bg-black/40" />
+                  {registerErrors.firstName && (
+                    <p className="error-msg">
+                      {registerErrors.firstName.message}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <input
+                    type="text"
+                    placeholder="Last name"
+                    className="w-full border-none outline-none text-base px-4 py-2"
+                    {...registerDetails("lastName")}
+                  />
+                  <div className="h-[1.2px] bg-black/40" />
+                  {registerErrors.lastName && (
+                    <p className="error-msg">{registerErrors.lastName.message}</p>
+                  )}
+                </div>
+                <div>
+                  <input
+                    type="password"
+                    placeholder="Password"
+                    className="w-full border-none outline-none text-base px-4 py-2"
+                    {...registerDetails("password")}
+                  />
+                  <div className="h-[1.2px] bg-black/40" />
+                  {registerErrors.password && (
+                    <p className="error-msg">{registerErrors.password.message}</p>
+                  )}
+                </div>
+                <div>
+                  <input
+                    type="password"
+                    placeholder="Confirm password"
+                    className="w-full border-none outline-none text-base px-4 py-2"
+                    {...registerDetails("confirmPassword")}
+                  />
+                  <div className="h-[1.2px] bg-black/40" />
+                  {registerErrors.confirmPassword && (
+                    <p className="error-msg">
+                      {registerErrors.confirmPassword.message}
+                    </p>
+                  )}
+                </div>
+                <button
+                  type="submit"
+                  className="w-full px-6 py-4 rounded bg-[#2699FA] text-white cursor-pointer active:scale-[98%] transition-all text-center"
+                >
+                  Register Account
+                </button>
+              </form>
+            )}
           </div>
         </div>
       )}
