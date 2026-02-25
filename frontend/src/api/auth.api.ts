@@ -1,5 +1,6 @@
 import type { LoginData } from "../schema/Login.schema";
 import axiosInstance from "./axios";
+
 export interface VerifyCaptchaResponse {
   success: boolean;
   message: string;
@@ -20,13 +21,17 @@ export interface VerifyOtpResponse extends ApiResponse {
   otpVerifiedToken: string;
 }
 
+export interface AuthApiResponse extends ApiResponse {
+  accessToken?: string;
+}
+
 export const login = (data: LoginData) => axiosInstance.post("/login", data);
 
 export const loginWithVerifiedToken = async (data: {
   email: string;
   otpVerifiedToken: string;
 }) => {
-  const res = await axiosInstance.post<ApiResponse>("/user/login", data);
+  const res = await axiosInstance.post<AuthApiResponse>("/user/login", data);
   return res.data;
 };
 
@@ -55,10 +60,15 @@ export const sendLoginOtp = async (email: string) => {
   return res.data;
 };
 
-export const verifyOtp = async (email: string, otp: string) => {
+export const verifyOtp = async (
+  email: string,
+  otp: string,
+  purpose: "register" | "login"
+) => {
   const res = await axiosInstance.post<VerifyOtpResponse>("otp/verify", {
     email,
     otp,
+    purpose,
   });
   return res.data;
 };
@@ -70,6 +80,15 @@ export const registerUser = async (data: {
   email: string;
   otpVerifiedToken: string;
 }) => {
-  const res = await axiosInstance.post<ApiResponse>("user/register", data);
+  const res = await axiosInstance.post<AuthApiResponse>("user/register", data);
+  return res.data;
+};
+
+export const getUserMe = async (accessToken: string) => {
+  const res = await axiosInstance.get<ApiResponse>("/user/me", {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
   return res.data;
 };

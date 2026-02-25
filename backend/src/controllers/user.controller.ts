@@ -4,6 +4,7 @@ import type mongoose from "mongoose";
 import { LoginUserRequest, RegisterUserRequest } from "../interfaces";
 import { OtpModel, type OtpType } from "../models/otp.model";
 import { UserModel } from "../models/user.model";
+import { createAccessToken } from "../services/auth.service";
 
 type OtpVerificationTokenPayload = {
   otpId?: string;
@@ -157,11 +158,13 @@ export const registerUser = async (
   });
 
   await OtpModel.deleteOne({ _id: otpDoc._id });
+  const accessToken = createAccessToken(user);
 
   return res.status(201).json({
     success: true,
     message: "User registered successfully",
     user,
+    accessToken,
   });
 };
 
@@ -199,10 +202,35 @@ export const loginUser = async (
   await user.save();
 
   await OtpModel.deleteOne({ _id: otpValidationResult.otpDoc._id });
+  const accessToken = createAccessToken(user);
 
   return res.status(200).json({
     success: true,
     message: "Login successful",
+    user,
+    accessToken,
+  });
+};
+
+export const getMyProfile = async (req: Request, res: Response) => {
+  if (!req.authUser?.sub) {
+    return res.status(401).json({
+      success: false,
+      message: "Unauthorized",
+    });
+  }
+
+  const user = await UserModel.findById(req.authUser.sub);
+
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: "User not found",
+    });
+  }
+
+  return res.status(200).json({
+    success: true,
     user,
   });
 };

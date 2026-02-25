@@ -3,7 +3,7 @@ import { isAxiosError } from "axios";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { IoReload } from "react-icons/io5";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { z } from "zod";
 import {
   type ApiResponse,
@@ -13,6 +13,7 @@ import {
   verifyOtp,
   verifyCaptcha,
 } from "../../api/auth.api";
+import { useAuth } from "../../context/AuthContext";
 import { loginSchema, type LoginData } from "../../schema/Login.schema";
 import Button from "../../utility/Button";
 import { InputOTPForm } from "./OTP";
@@ -32,6 +33,8 @@ const registerDetailsSchema = z
 type RegisterDetailsData = z.infer<typeof registerDetailsSchema>;
 
 const SignInForm = () => {
+  const navigate = useNavigate();
+  const { loginWithToken } = useAuth();
   const [svg, setSvg] = useState<string>("");
   const [reload, setReload] = useState<boolean>(false);
   const [captchaValid, setCaptchaValid] = useState(false);
@@ -118,7 +121,7 @@ const SignInForm = () => {
     }
 
     try {
-      const otpRes = await verifyOtp(pendingSignup.email, otp);
+      const otpRes = await verifyOtp(pendingSignup.email, otp, "register");
       const { success, message, otpVerifiedToken } = otpRes;
 
       if (!success) {
@@ -160,6 +163,17 @@ const SignInForm = () => {
         return;
       }
 
+      if (!registerRes.accessToken) {
+        alert("Access token missing after registration.");
+        return;
+      }
+
+      const isLoggedIn = await loginWithToken(registerRes.accessToken);
+      if (!isLoggedIn) {
+        alert("Failed to load user profile.");
+        return;
+      }
+
       alert(registerRes.message || "Account created successfully.");
       setOtp("");
       setPendingSignup(null);
@@ -167,6 +181,7 @@ const SignInForm = () => {
       reset();
       resetRegisterDetails();
       setReload((prev) => !prev);
+      navigate("/");
     } catch (err: unknown) {
       alert(getErrorMessage(err, "User registration failed."));
     }

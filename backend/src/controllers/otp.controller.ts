@@ -28,14 +28,14 @@ export const sendOtp = async (
     });
   }
 
-  jwt.verify(captchaVerifiedToken, secret, (err) => {
-    if (err) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid captcha verification token",
-      });
-    }
-  });
+  try {
+    jwt.verify(captchaVerifiedToken, secret);
+  } catch {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid captcha verification token",
+    });
+  }
 
   const otp = generateOtp();
   const { success } = await sendEmailOtp(email, otp);
@@ -61,13 +61,20 @@ export const verifyOtp = async (
   req: Request<{}, {}, SignInRequest>,
   res: Response,
 ) => {
-  const { email, otp } = req.body;
+  const { email, otp, purpose = "register" } = req.body;
   const secret = process.env.JWT_SECRET;
 
   if (!secret) {
     return res.status(500).json({
       success: false,
       message: "Server configuration error",
+    });
+  }
+
+  if (!["register", "login"].includes(purpose)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid OTP verification purpose",
     });
   }
 
@@ -101,7 +108,7 @@ export const verifyOtp = async (
   }
 
   const otpVerifiedToken = jwt.sign(
-    { otpId: otpDoc._id.toString(), purpose: "register" },
+    { otpId: otpDoc._id.toString(), purpose },
     secret,
     { expiresIn: "10m" },
   );

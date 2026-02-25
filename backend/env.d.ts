@@ -6,5 +6,6 @@ declare namespace NodeJS {
     GOOGLE_REFRESH_TOKEN: string;
     USER_MAIL: string;
     JWT_SECRET: string;
+    JWT_ACCESS_EXPIRES_IN?: string;
   }
 }

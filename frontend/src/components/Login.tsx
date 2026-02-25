@@ -10,6 +10,7 @@ import {
   sendLoginOtp,
   verifyOtp,
 } from "../api/auth.api";
+import { useAuth } from "../context/AuthContext";
 import {
   InputOTP,
   InputOTPGroup,
@@ -24,6 +25,7 @@ type LoginWithType = {
 
 const Login = () => {
   const navigate = useNavigate();
+  const { loginWithToken } = useAuth();
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [otpRequested, setOtpRequested] = useState(false);
@@ -93,7 +95,7 @@ const Login = () => {
 
     try {
       setIsVerifying(true);
-      const verifyResponse = await verifyOtp(email.trim(), otp);
+      const verifyResponse = await verifyOtp(email.trim(), otp, "login");
 
       if (!verifyResponse.success) {
         alert(verifyResponse.message || "OTP verification failed");
@@ -112,6 +114,17 @@ const Login = () => {
 
       if (!loginResponse.success) {
         alert(loginResponse.message || "Login failed");
+        return;
+      }
+
+      if (!loginResponse.accessToken) {
+        alert("Access token missing");
+        return;
+      }
+
+      const isLoggedIn = await loginWithToken(loginResponse.accessToken);
+      if (!isLoggedIn) {
+        alert("Failed to load user profile");
         return;
       }
 

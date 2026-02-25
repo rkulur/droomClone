@@ -3,7 +3,7 @@ import {
   CaptchaVerificationResult,
 } from "./captcha.interface";
 import { LoginOtpRequest, OtpRequest } from "./otp.interface";
-import { SignInRequest } from "./auth.interface";
+import { AccessTokenPayload, SignInRequest } from "./auth.interface";
 import { LoginUserRequest, RegisterUserRequest, UserRole } from "./user.interface";
 
 export {
@@ -11,6 +11,7 @@ export {
   CaptchaVerificationResult,
   LoginOtpRequest,
   OtpRequest,
+  AccessTokenPayload,
   SignInRequest,
   LoginUserRequest,
   RegisterUserRequest,
