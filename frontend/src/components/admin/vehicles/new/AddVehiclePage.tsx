@@ -4,6 +4,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
+import { toast } from "sonner";
 import { Separator } from "../../../ui/separator";
 import StepIndicator from "../components/StepIndicator";
 import StepNavigation from "../components/StepNavigation";
@@ -20,6 +21,7 @@ import {
   step5Schema,
 } from "./listingSchema";
 import { useListingStore } from "../../../../stores/useListingStore";
+import { submitListing } from "../../../../lib/listingApi";
 
 type StepSchema = typeof step1Schema;
 
@@ -28,6 +30,7 @@ const AddVehiclePage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const currentStep = useListingStore((state) => state.currentStep);
   const setStep = useListingStore((state) => state.setStep);
+  const resetDraft = useListingStore((state) => state.resetDraft);
 
   const draftSnapshot = useListingStore((state) => state);
 
@@ -75,12 +78,20 @@ const AddVehiclePage = () => {
   };
 
   useEffect(() => {
-    const handlePublish = () => {
+    const handlePublish = async () => {
       setIsSubmitting(true);
-      setTimeout(() => {
+      try {
+        const payload = useListingStore.getState() as unknown as Record<string, unknown>;
+        const { id } = await submitListing(payload);
+        resetDraft();
+        navigate(`/admin/vehicles/${id}`);
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Failed to submit listing";
+        toast.error(message);
+      } finally {
         setIsSubmitting(false);
-        navigate("/admin");
-      }, 800);
+      }
     };
 
     window.addEventListener("listing-publish", handlePublish);
