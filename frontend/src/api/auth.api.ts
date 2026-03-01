@@ -25,6 +25,19 @@ export interface AuthApiResponse extends ApiResponse {
   accessToken?: string;
 }
 
+export interface UserProfile {
+  firstName?: string;
+  lastName?: string;
+  name?: string;
+  mobileNumber?: string;
+  phoneNumber?: string;
+}
+
+export interface UserMeResponse extends ApiResponse {
+  user?: UserProfile;
+  data?: UserProfile | { user?: UserProfile };
+}
+
 export const login = (data: LoginData) => axiosInstance.post("/login", data);
 
 export const loginWithVerifiedToken = async (data: {
@@ -85,7 +98,7 @@ export const registerUser = async (data: {
 };
 
 export const getUserMe = async (accessToken: string) => {
-  const res = await axiosInstance.get<ApiResponse>("/user/me", {
+  const res = await axiosInstance.get<UserMeResponse>("/user/me", {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
