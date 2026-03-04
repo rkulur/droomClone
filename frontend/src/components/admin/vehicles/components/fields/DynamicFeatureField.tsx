@@ -2,17 +2,12 @@
 // Admin route: <Route path="/admin" element={canAccessAdmin ? <AdminPage /> : <Navigate to="/" replace />} />
 // Admin component: src/components/admin/index.tsx
 
-import { Badge } from "../../../ui/badge";
-import { Checkbox } from "../../../ui/checkbox";
-import { Input } from "../../../ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../../../ui/select";
-import { Switch } from "../../../ui/switch";
+import { Badge } from "../../../../ui/badge";
+import { Checkbox } from "../../../../ui/checkbox";
+import { Input } from "../../../../ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../../ui/select";
+import { Switch } from "../../../../ui/switch";
+
 
 type DynamicField = {
   key: string;

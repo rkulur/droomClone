@@ -7,22 +7,22 @@ import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { Badge } from "../../../ui/badge";
-import { Button } from "../../../ui/button";
-import { Calendar } from "../../../ui/calendar";
-import { Checkbox } from "../../../ui/checkbox";
-import { Input } from "../../../ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "../../../ui/popover";
+import { Badge } from "../../../../ui/badge";
+import { Button } from "../../../../ui/button";
+import { Calendar } from "../../../../ui/calendar";
+import { Checkbox } from "../../../../ui/checkbox";
+import { Input } from "../../../../ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "../../../../ui/popover";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../../ui/select";
-import { Switch } from "../../../ui/switch";
-import { cn } from "../../../../lib/utils";
-import { useListingStore } from "../../../../stores/useListingStore";
+} from "../../../../ui/select";
+import { Switch } from "../../../../ui/switch";
+import { cn } from "../../../../../lib/utils";
+import { useListingStore } from "../../../../../stores/useListingStore";
 import FieldError from "../FieldError";
 import FormSection from "../FormSection";
 import { step2Schema } from "../../new/listingSchema";

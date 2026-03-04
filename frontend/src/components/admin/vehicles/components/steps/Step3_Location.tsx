@@ -6,16 +6,16 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { MapPin } from "lucide-react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { Input } from "../../../ui/input";
+import { Input } from "../../../../ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../../ui/select";
-import { Textarea } from "../../../ui/textarea";
-import { useListingStore } from "../../../../stores/useListingStore";
+} from "../../../../ui/select";
+import { Textarea } from "../../../../ui/textarea";
+import { useListingStore } from "../../../../../stores/useListingStore";
 import FieldError from "../FieldError";
 import FormSection from "../FormSection";
 import { step3Schema } from "../../new/listingSchema";

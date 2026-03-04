@@ -4,10 +4,10 @@
 
 import { FileText, Star, UploadCloud, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { Badge } from "../../../ui/badge";
-import { Input } from "../../../ui/input";
-import { cn } from "../../../../lib/utils";
-import { useListingStore } from "../../../../stores/useListingStore";
+import { Badge } from "../../../../ui/badge";
+import { Input } from "../../../../ui/input";
+import { cn } from "../../../../../lib/utils";
+import { useListingStore } from "../../../../../stores/useListingStore";
 import FormSection from "../FormSection";
 
 const MAX_SIZE_BYTES = 10 * 1024 * 1024;

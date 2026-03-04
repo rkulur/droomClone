@@ -5,7 +5,7 @@
 import { useMemo, useState } from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
 import useSWR from "swr";
-import { Button } from "../../../ui/button";
+import { Button } from "../../../../ui/button";
 import {
   Command,
   CommandEmpty,
@@ -13,11 +13,11 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "../../../ui/command";
-import { Input } from "../../../ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "../../../ui/popover";
-import { Skeleton } from "../../../ui/skeleton";
-import { cn } from "../../../../lib/utils";
+} from "../../../../ui/command";
+import { Input } from "../../../../ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "../../../../ui/popover";
+import { Skeleton } from "../../../../ui/skeleton";
+import { cn } from "../../../../../lib/utils";
 
 type Variant = {
   name: string;

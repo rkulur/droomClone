@@ -4,7 +4,7 @@
 
 import { X } from "lucide-react";
 import { useRef, useState } from "react";
-import { Badge } from "../../../ui/badge";
+import { Badge } from "../../../../ui/badge";
 
 type TagInputProps = {
   value: string[];
