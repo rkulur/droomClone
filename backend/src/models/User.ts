@@ -90,8 +90,6 @@ const userSchema = new Schema(
   },
 );
 
-userSchema.index({ email: 1 }, { unique: true });
-userSchema.index({ phone: 1 }, { unique: true });
 userSchema.index({ role: 1, "sellerProfile.verificationStatus": 1 });
 
 const User =

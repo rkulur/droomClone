@@ -1,0 +1,155 @@
+{
+  "info": {
+    "_postman_id": "a915d2d0-0d40-4702-aa61-09cb4920c29a",
+    "name": "Droom Backend - OTP",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Postman Collection v2.1 for OTP APIs. These routes are mounted under /otp."
+  },
+  "item": [
+    {
+      "name": "Send OTP",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{email}}\",\n  \"phoneNumber\": \"{{phoneNumber}}\",\n  \"captchaVerifiedToken\": \"{{captchaVerifiedToken}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/otp",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "otp"
+          ]
+        },
+        "description": "Sends a registration OTP email. Requires a valid captcha verification token."
+      }
+    },
+    {
+      "name": "Verify OTP For Register",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{email}}\",\n  \"otp\": \"{{otp}}\",\n  \"purpose\": \"register\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/otp/verify",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "otp",
+            "verify"
+          ]
+        },
+        "description": "Verifies the OTP and returns otpVerifiedToken for registration."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "try {",
+              "  var json = pm.response.json();",
+              "  if (json.otpVerifiedToken) {",
+              "    pm.environment.set('otpVerifiedToken', json.otpVerifiedToken);",
+              "  }",
+              "} catch (error) {}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Send Login OTP",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{email}}\",\n  \"phoneNumber\": \"{{phoneNumber}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/otp/send-login-otp",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "otp",
+            "send-login-otp"
+          ]
+        },
+        "description": "Sends a login OTP without captcha validation."
+      }
+    },
+    {
+      "name": "Verify OTP For Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{email}}\",\n  \"otp\": \"{{otp}}\",\n  \"purpose\": \"login\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/otp/verify",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "otp",
+            "verify"
+          ]
+        },
+        "description": "Verifies the OTP and returns otpVerifiedToken for login."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "try {",
+              "  var json = pm.response.json();",
+              "  if (json.otpVerifiedToken) {",
+              "    pm.environment.set('otpVerifiedToken', json.otpVerifiedToken);",
+              "  }",
+              "} catch (error) {}"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    }
+  ]
+}

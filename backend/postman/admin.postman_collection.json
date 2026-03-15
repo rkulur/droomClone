@@ -1,0 +1,346 @@
+{
+  "info": {
+    "_postman_id": "9355fd78-757d-4d96-86ce-386685ea3ba8",
+    "name": "Droom Backend - Admin",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Postman Collection v2.1 for admin vehicle listing and upload APIs mounted under /api/admin."
+  },
+  "item": [
+    {
+      "name": "Catalog Management",
+      "item": [
+        {
+          "name": "Create Category",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Car\",\n  \"slug\": \"car\",\n  \"iconUrl\": \"https://cdn.example.com/icons/car.svg\",\n  \"description\": \"Four-wheeler listings\",\n  \"sortOrder\": 1,\n  \"isActive\": true,\n  \"metaTitle\": \"Car category\",\n  \"metaDescription\": \"Vehicle category for car listings\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "categories"
+              ]
+            },
+            "description": "Creates a catalog category. If the seeded category already exists, the API returns a conflict."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  var json = pm.response.json();",
+                  "  if (json.data && json.data._id) {",
+                  "    pm.environment.set('categoryId', json.data._id);",
+                  "  }",
+                  "} catch (error) {}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Brand Under Category",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"categoryId\": \"{{categoryId}}\",\n  \"name\": \"Maruti Suzuki\",\n  \"slug\": \"maruti-suzuki\",\n  \"logoUrl\": \"https://cdn.example.com/brands/maruti.png\",\n  \"description\": \"Popular Indian passenger vehicle brand\",\n  \"country\": \"India\",\n  \"website\": \"https://www.marutisuzuki.com\",\n  \"isPopular\": true,\n  \"sortOrder\": 1,\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/brands",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "brands"
+              ]
+            },
+            "description": "Creates a brand and links it to the selected category. If the brand already exists globally, the API links it to the category instead."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  var json = pm.response.json();",
+                  "  if (json.data && json.data._id) {",
+                  "    pm.environment.set('brandId', json.data._id);",
+                  "  }",
+                  "} catch (error) {}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Model Under Brand",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"categoryId\": \"{{categoryId}}\",\n  \"brandId\": \"{{brandId}}\",\n  \"name\": \"Swift\",\n  \"slug\": \"swift\",\n  \"yearFrom\": 2018,\n  \"yearTo\": null,\n  \"isActive\": true,\n  \"variants\": [\n    {\n      \"name\": \"LXI\",\n      \"launchYear\": 2018\n    },\n    {\n      \"name\": \"VXI\",\n      \"launchYear\": 2018\n    },\n    {\n      \"name\": \"ZXI+\",\n      \"launchYear\": 2021\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/models",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "models"
+              ]
+            },
+            "description": "Creates a model under the selected brand and category."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  var json = pm.response.json();",
+                  "  if (json.data && json.data._id) {",
+                  "    pm.environment.set('modelId', json.data._id);",
+                  "  }",
+                  "} catch (error) {}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Upload Images",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "files",
+              "type": "file",
+              "src": "/tmp/example-car.jpg"
+            },
+            {
+              "key": "files",
+              "type": "file",
+              "src": "/tmp/example-car-2.png"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/uploads/images",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "admin",
+            "uploads",
+            "images"
+          ]
+        },
+        "description": "Uploads JPEG/PNG images using multipart/form-data with repeated files fields. Replace the sample file paths with real local files before sending."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "try {",
+              "  var json = pm.response.json();",
+              "  if (json.data && json.data.length) {",
+              "    pm.environment.set('uploadedImageUrl', json.data[0].url || '');",
+              "    pm.environment.set('uploadedImageStorageKey', json.data[0].storageKey || '');",
+              "  }",
+              "} catch (error) {}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Upload Inspection Report",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "files",
+              "type": "file",
+              "src": "/tmp/example-report.pdf"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/uploads/reports",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "admin",
+            "uploads",
+            "reports"
+          ]
+        },
+        "description": "Uploads a PDF, JPEG, or PNG inspection report. Replace the sample file path before sending."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "try {",
+              "  var json = pm.response.json();",
+              "  if (json.data) {",
+              "    pm.environment.set('uploadedReportUrl', json.data.url || '');",
+              "    pm.environment.set('uploadedReportStorageKey', json.data.storageKey || '');",
+              "  }",
+              "} catch (error) {}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Create Vehicle Listing",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"2021 Maruti Swift VXI - First Owner\",\n  \"description\": \"Well maintained car with service history\",\n  \"categoryId\": \"{{categoryId}}\",\n  \"brandId\": \"{{brandId}}\",\n  \"modelId\": \"{{modelId}}\",\n  \"modelName\": \"Swift\",\n  \"variant\": \"VXI\",\n  \"year\": 2021,\n  \"regNumber\": \"MH02AB1234\",\n  \"price\": 550000,\n  \"currency\": \"INR\",\n  \"isNegotiable\": true,\n  \"emiAvailable\": false,\n  \"emiStartingFrom\": null,\n  \"emiTenure\": null,\n  \"emiProvider\": \"\",\n  \"isPriceDropped\": false,\n  \"previousPrice\": null,\n  \"fuelType\": \"petrol\",\n  \"transmission\": \"manual\",\n  \"kmsDriven\": 32000,\n  \"ownership\": \"1st\",\n  \"color\": \"White\",\n  \"condition\": \"good\",\n  \"insuranceValid\": true,\n  \"insuranceExpiry\": \"2027-02-28T00:00:00.000Z\",\n  \"rtoState\": \"MH\",\n  \"hypothecation\": false,\n  \"locationAddress\": \"Andheri West\",\n  \"locationCity\": \"Mumbai\",\n  \"locationState\": \"Maharashtra\",\n  \"locationPincode\": \"400058\",\n  \"locationLng\": 72.8347,\n  \"locationLat\": 19.1364,\n  \"images\": [\n    {\n      \"url\": \"{{uploadedImageUrl}}\",\n      \"thumbnailUrl\": \"{{uploadedImageUrl}}\",\n      \"isPrimary\": true,\n      \"sortOrder\": 0,\n      \"storageKey\": \"{{uploadedImageStorageKey}}\"\n    }\n  ],\n  \"videoUrl\": \"\",\n  \"video360Url\": \"\",\n  \"inspectionReportUrl\": \"{{uploadedReportUrl}}\",\n  \"featureSections\": [\n    {\n      \"sectionTitle\": \"Engine & Performance\",\n      \"sortOrder\": 1,\n      \"fields\": [\n        {\n          \"label\": \"Engine Capacity\",\n          \"value\": \"1197\",\n          \"icon\": \"\",\n          \"isHighlighted\": true\n        }\n      ]\n    }\n  ],\n  \"searchableFeatures\": {\n    \"fuelType\": \"Petrol\",\n    \"transmission\": \"Manual\"\n  },\n  \"inspected\": true,\n  \"inspectedBy\": \"QA Admin\",\n  \"inspectionScore\": 8.5,\n  \"inspectionDate\": \"2026-03-15T00:00:00.000Z\",\n  \"rcVerified\": true,\n  \"challanClear\": true,\n  \"buyerSurety\": false,\n  \"sellerType\": \"dealer\",\n  \"listingPlan\": \"gold\",\n  \"tags\": [\"first-owner\", \"service-history\"],\n  \"metaTitle\": \"2021 Maruti Swift VXI used car\",\n  \"metaDescription\": \"Used Maruti Swift VXI for sale in Mumbai\",\n  \"status\": \"draft\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/vehicles",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "admin",
+            "vehicles"
+          ]
+        },
+        "description": "Creates an admin vehicle listing. Run Catalog requests first so categoryId, brandId, and modelId are populated. If you skip the upload requests, replace the image/report variables with valid URLs."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "try {",
+              "  var json = pm.response.json();",
+              "  var vehicle = json.data || json.vehicle || json;",
+              "  if (vehicle && vehicle._id) {",
+              "    pm.environment.set('vehicleId', vehicle._id);",
+              "  }",
+              "} catch (error) {}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Get Vehicle Listing",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/vehicles/{{vehicleId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "admin",
+            "vehicles",
+            "{{vehicleId}}"
+          ]
+        },
+        "description": "Fetches a single admin vehicle listing by ID."
+      }
+    },
+    {
+      "name": "Update Vehicle Listing",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"2021 Maruti Swift VXI - Updated Price\",\n  \"description\": \"Updated after inspection\",\n  \"categoryId\": \"{{categoryId}}\",\n  \"brandId\": \"{{brandId}}\",\n  \"modelId\": \"{{modelId}}\",\n  \"modelName\": \"Swift\",\n  \"variant\": \"VXI\",\n  \"year\": 2021,\n  \"regNumber\": \"MH02AB1234\",\n  \"price\": 535000,\n  \"currency\": \"INR\",\n  \"isNegotiable\": true,\n  \"emiAvailable\": true,\n  \"emiStartingFrom\": 9400,\n  \"emiTenure\": 60,\n  \"emiProvider\": \"Sample Bank\",\n  \"isPriceDropped\": true,\n  \"previousPrice\": 550000,\n  \"fuelType\": \"petrol\",\n  \"transmission\": \"manual\",\n  \"kmsDriven\": 32500,\n  \"ownership\": \"1st\",\n  \"color\": \"White\",\n  \"condition\": \"excellent\",\n  \"insuranceValid\": true,\n  \"insuranceExpiry\": \"2027-02-28T00:00:00.000Z\",\n  \"rtoState\": \"MH\",\n  \"hypothecation\": false,\n  \"locationAddress\": \"Andheri West\",\n  \"locationCity\": \"Mumbai\",\n  \"locationState\": \"Maharashtra\",\n  \"locationPincode\": \"400058\",\n  \"locationLng\": 72.8347,\n  \"locationLat\": 19.1364,\n  \"images\": [\n    {\n      \"url\": \"{{uploadedImageUrl}}\",\n      \"thumbnailUrl\": \"{{uploadedImageUrl}}\",\n      \"isPrimary\": true,\n      \"sortOrder\": 0,\n      \"storageKey\": \"{{uploadedImageStorageKey}}\"\n    }\n  ],\n  \"videoUrl\": \"\",\n  \"video360Url\": \"\",\n  \"inspectionReportUrl\": \"{{uploadedReportUrl}}\",\n  \"featureSections\": [\n    {\n      \"sectionTitle\": \"Engine & Performance\",\n      \"sortOrder\": 1,\n      \"fields\": [\n        {\n          \"label\": \"Engine Capacity\",\n          \"value\": \"1197\",\n          \"icon\": \"\",\n          \"isHighlighted\": true\n        }\n      ]\n    }\n  ],\n  \"searchableFeatures\": {\n    \"fuelType\": \"Petrol\",\n    \"transmission\": \"Manual\"\n  },\n  \"inspected\": true,\n  \"inspectedBy\": \"QA Admin\",\n  \"inspectionScore\": 9,\n  \"inspectionDate\": \"2026-03-15T00:00:00.000Z\",\n  \"rcVerified\": true,\n  \"challanClear\": true,\n  \"buyerSurety\": true,\n  \"sellerType\": \"dealer\",\n  \"listingPlan\": \"gold\",\n  \"tags\": [\"updated\", \"price-drop\"],\n  \"metaTitle\": \"2021 Maruti Swift VXI used car updated\",\n  \"metaDescription\": \"Updated listing for Maruti Swift VXI in Mumbai\",\n  \"status\": \"published\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/vehicles/{{vehicleId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "admin",
+            "vehicles",
+            "{{vehicleId}}"
+          ]
+        },
+        "description": "Updates an existing admin vehicle listing by ID."
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    }
+  ]
+}

@@ -1,0 +1,187 @@
+{
+  "info": {
+    "_postman_id": "d7f2d2a5-3e0d-4bb2-b272-55fa23cc7912",
+    "name": "Droom Backend - Catalog",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Postman Collection v2.1 for catalog APIs mounted under /api."
+  },
+  "item": [
+    {
+      "name": "Get Categories",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/categories?isActive=true",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "categories"
+          ],
+          "query": [
+            {
+              "key": "isActive",
+              "value": "true"
+            }
+          ]
+        },
+        "description": "Returns categories. Useful first request for admin listing flows."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "try {",
+              "  var json = pm.response.json();",
+              "  if (json.data && json.data.length) {",
+              "    pm.environment.set('categoryId', json.data[0]._id);",
+              "  }",
+              "} catch (error) {}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Get Brands By Category",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/brands?category={{categoryId}}&isActive=true",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "brands"
+          ],
+          "query": [
+            {
+              "key": "category",
+              "value": "{{categoryId}}"
+            },
+            {
+              "key": "isActive",
+              "value": "true"
+            }
+          ]
+        },
+        "description": "Returns brands for a category. Requires categoryId."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "try {",
+              "  var json = pm.response.json();",
+              "  if (json.data && json.data.length) {",
+              "    pm.environment.set('brandId', json.data[0]._id);",
+              "  }",
+              "} catch (error) {}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Get Models By Brand",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/models?brand={{brandId}}&isActive=true",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "models"
+          ],
+          "query": [
+            {
+              "key": "brand",
+              "value": "{{brandId}}"
+            },
+            {
+              "key": "isActive",
+              "value": "true"
+            }
+          ]
+        },
+        "description": "Returns models for a brand. Requires brandId."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "try {",
+              "  var json = pm.response.json();",
+              "  if (json.data && json.data.length) {",
+              "    pm.environment.set('modelId', json.data[0]._id);",
+              "  }",
+              "} catch (error) {}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Get Model Details",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/models/{{modelId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "models",
+            "{{modelId}}"
+          ]
+        },
+        "description": "Returns model details and variants."
+      }
+    },
+    {
+      "name": "Get Feature Templates",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/feature-templates?category={{categoryId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "feature-templates"
+          ],
+          "query": [
+            {
+              "key": "category",
+              "value": "{{categoryId}}"
+            }
+          ]
+        },
+        "description": "Returns active feature template sections for the selected category."
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    }
+  ]
+}

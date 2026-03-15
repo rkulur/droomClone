@@ -26,7 +26,6 @@ const vehicleModelSchema = new Schema(
 );
 
 vehicleModelSchema.index({ brand: 1, category: 1 });
-vehicleModelSchema.index({ slug: 1 }, { unique: true });
 
 const VehicleModel =
   (mongoose.models["VehicleModel"] as mongoose.Model<any>) ||

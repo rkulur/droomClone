@@ -5,28 +5,27 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
+import useSWR from "swr";
+import { z } from "zod";
 import { Input } from "../../../../ui/input";
 import { Textarea } from "../../../../ui/textarea";
-import { useListingStore, type ListingDraft } from "../../../../../stores/useListingStore";
+import { useListingStore } from "../../../../../stores/useListingStore";
 import FieldError from "../FieldError";
 import FormSection from "../FormSection";
 import BrandPicker from "../fields/BrandPicker";
 import CategoryPicker from "../fields/CategoryPicker";
 import ModelPicker from "../fields/ModelPicker";
 import VariantPicker from "../fields/VariantPicker";
+import { fetchJson } from "../../api/client";
+import { adminVehicleApi } from "../../api/endpoints";
 import { step1Schema } from "../../new/listingSchema";
 
-type Step1Values = Pick<
-  ListingDraft,
-  | "title"
-  | "description"
-  | "categoryId"
-  | "brandId"
-  | "modelId"
-  | "variant"
-  | "year"
-  | "regNumber"
->;
+type Step1Values = z.input<typeof step1Schema>;
+type CatalogItem = {
+  _id?: string;
+  id?: string;
+  name: string;
+};
 
 const Step1_Identity = () => {
   const title = useListingStore((state) => state.title);
@@ -34,6 +33,7 @@ const Step1_Identity = () => {
   const categoryId = useListingStore((state) => state.categoryId);
   const brandId = useListingStore((state) => state.brandId);
   const modelId = useListingStore((state) => state.modelId);
+  const modelName = useListingStore((state) => state.modelName);
   const variant = useListingStore((state) => state.variant);
   const year = useListingStore((state) => state.year);
   const regNumber = useListingStore((state) => state.regNumber);
@@ -49,10 +49,23 @@ const Step1_Identity = () => {
       brandId,
       modelId,
       variant,
-      year,
+      year: year ?? undefined,
       regNumber,
     },
   });
+
+  const { data: categories = [] } = useSWR(
+    adminVehicleApi.categories,
+    fetchJson<CatalogItem[]>,
+  );
+  const { data: brands = [] } = useSWR(
+    categoryId ? adminVehicleApi.brands(categoryId) : null,
+    fetchJson<CatalogItem[]>,
+  );
+  const { data: models = [] } = useSWR(
+    brandId ? adminVehicleApi.models(brandId) : null,
+    fetchJson<CatalogItem[]>,
+  );
 
   useEffect(() => {
     form.setValue("title", title, { shouldDirty: false });
@@ -61,9 +74,80 @@ const Step1_Identity = () => {
     form.setValue("brandId", brandId, { shouldDirty: false });
     form.setValue("modelId", modelId, { shouldDirty: false });
     form.setValue("variant", variant, { shouldDirty: false });
-    form.setValue("year", year, { shouldDirty: false });
+    form.setValue("year", (year ?? undefined) as Step1Values["year"], {
+      shouldDirty: false,
+    });
     form.setValue("regNumber", regNumber, { shouldDirty: false });
   }, [brandId, categoryId, description, form, modelId, regNumber, title, variant, year]);
+
+  useEffect(() => {
+    if (!categoryId) {
+      return;
+    }
+
+    const hasCategory = categories.some(
+      (item) => (item._id ?? item.id ?? "") === categoryId,
+    );
+
+    if (hasCategory) {
+      return;
+    }
+
+    setField("categoryId", "");
+    setField("brandId", "");
+    setField("modelId", "");
+    setField("modelName", "");
+    setField("variant", "");
+    form.setValue("categoryId", "", { shouldValidate: true });
+    form.setValue("brandId", "");
+    form.setValue("modelId", "");
+    form.setValue("variant", "");
+  }, [categories, categoryId, form, setField]);
+
+  useEffect(() => {
+    if (!brandId) {
+      return;
+    }
+
+    const hasBrand = brands.some(
+      (item) => (item._id ?? item.id ?? "") === brandId,
+    );
+
+    if (hasBrand) {
+      return;
+    }
+
+    setField("brandId", "");
+    setField("modelId", "");
+    setField("modelName", "");
+    setField("variant", "");
+    form.setValue("brandId", "", { shouldValidate: true });
+    form.setValue("modelId", "");
+    form.setValue("variant", "");
+  }, [brandId, brands, form, setField]);
+
+  useEffect(() => {
+    if (!modelId) {
+      return;
+    }
+
+    const selectedModel = models.find(
+      (item) => (item._id ?? item.id ?? "") === modelId,
+    );
+
+    if (selectedModel) {
+      if (modelName !== selectedModel.name) {
+        setField("modelName", selectedModel.name);
+      }
+      return;
+    }
+
+    setField("modelId", "");
+    setField("modelName", "");
+    setField("variant", "");
+    form.setValue("modelId", "", { shouldValidate: true });
+    form.setValue("variant", "");
+  }, [form, modelId, modelName, models, setField]);
 
   useEffect(() => {
     const handler = () => {
@@ -169,7 +253,13 @@ const Step1_Identity = () => {
                 const parsed = Number.parseInt(event.target.value, 10);
                 const nextValue = Number.isNaN(parsed) ? null : parsed;
                 setField("year", nextValue);
-                form.setValue("year", nextValue, { shouldValidate: true });
+                form.setValue(
+                  "year",
+                  (nextValue ?? undefined) as Step1Values["year"],
+                  {
+                    shouldValidate: true,
+                  },
+                );
               }}
             />
             <FieldError message={form.formState.errors.year?.message} />

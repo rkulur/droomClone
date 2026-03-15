@@ -2,9 +2,10 @@
 // Admin route: <Route path="/admin" element={canAccessAdmin ? <AdminPage /> : <Navigate to="/" replace />} />
 // Admin component: src/components/admin/index.tsx
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
 import useSWR from "swr";
+import { toast } from "sonner";
 import { Button } from "../../../../ui/button";
 import {
   Command,
@@ -17,6 +18,8 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "../../../../ui/popover";
 import { Skeleton } from "../../../../ui/skeleton";
 import { cn } from "../../../../../lib/utils";
+import { fetchJson, getErrorMessage } from "../../api/client";
+import { adminVehicleApi } from "../../api/endpoints";
 
 type Brand = {
   _id?: string;
@@ -32,29 +35,29 @@ type BrandPickerProps = {
   disabled: boolean;
 };
 
-const fetcher = async (url: string) => {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error("Failed to fetch brands");
-  }
-  return response.json();
-};
-
 const BrandPicker = ({ value, onChange, categoryId, disabled }: BrandPickerProps) => {
   const [open, setOpen] = useState(false);
   const { data, error, isLoading } = useSWR(
-    categoryId ? `/api/brands?category=${categoryId}&isActive=true` : null,
-    fetcher
+    categoryId ? adminVehicleApi.brands(categoryId) : null,
+    fetchJson<Brand[]>
   );
 
+  useEffect(() => {
+    if (!error) {
+      return;
+    }
+
+    toast.error(getErrorMessage(error, "Failed to fetch brands"));
+  }, [error]);
+
   const items = useMemo(() => {
-    const raw = (data?.data ?? data ?? []) as Brand[];
+    const raw = (data ?? []) as Brand[];
     return raw.map((item) => ({
       id: item._id ?? item.id ?? "",
       label: item.name,
       logoUrl: item.logoUrl,
     }));
-  }, [data]);
+  }, [categoryId, data]);
 
   const selected = items.find((item) => item.id === value);
 
@@ -68,14 +71,6 @@ const BrandPicker = ({ value, onChange, categoryId, disabled }: BrandPickerProps
 
   if (isLoading) {
     return <Skeleton className="h-10 w-full rounded-md" />;
-  }
-
-  if (error) {
-    return (
-      <Button variant="outline" className="w-full justify-between" disabled type="button">
-        Failed to load brands
-      </Button>
-    );
   }
 
   return (

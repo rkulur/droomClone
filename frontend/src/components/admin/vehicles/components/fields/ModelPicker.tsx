@@ -2,9 +2,10 @@
 // Admin route: <Route path="/admin" element={canAccessAdmin ? <AdminPage /> : <Navigate to="/" replace />} />
 // Admin component: src/components/admin/index.tsx
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
 import useSWR from "swr";
+import { toast } from "sonner";
 import { Button } from "../../../../ui/button";
 import {
   Command,
@@ -17,6 +18,8 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "../../../../ui/popover";
 import { Skeleton } from "../../../../ui/skeleton";
 import { cn } from "../../../../../lib/utils";
+import { fetchJson, getErrorMessage } from "../../api/client";
+import { adminVehicleApi } from "../../api/endpoints";
 
 type Model = {
   _id?: string;
@@ -33,30 +36,30 @@ type ModelPickerProps = {
   disabled: boolean;
 };
 
-const fetcher = async (url: string) => {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error("Failed to fetch models");
-  }
-  return response.json();
-};
-
 const ModelPicker = ({ value, onChange, brandId, disabled }: ModelPickerProps) => {
   const [open, setOpen] = useState(false);
   const { data, error, isLoading } = useSWR(
-    brandId ? `/api/models?brand=${brandId}&isActive=true` : null,
-    fetcher
+    brandId ? adminVehicleApi.models(brandId) : null,
+    fetchJson<Model[]>
   );
 
+  useEffect(() => {
+    if (!error) {
+      return;
+    }
+
+    toast.error(getErrorMessage(error, "Failed to fetch models"));
+  }, [error]);
+
   const items = useMemo(() => {
-    const raw = (data?.data ?? data ?? []) as Model[];
+    const raw = (data ?? []) as Model[];
     return raw.map((item) => ({
       id: item._id ?? item.id ?? "",
       label: item.name,
       from: item.yearFrom,
       to: item.yearTo,
     }));
-  }, [data]);
+  }, [brandId, data]);
 
   const selected = items.find((item) => item.id === value);
 
@@ -70,14 +73,6 @@ const ModelPicker = ({ value, onChange, brandId, disabled }: ModelPickerProps) =
 
   if (isLoading) {
     return <Skeleton className="h-10 w-full rounded-md" />;
-  }
-
-  if (error) {
-    return (
-      <Button variant="outline" className="w-full justify-between" disabled type="button">
-        Failed to load models
-      </Button>
-    );
   }
 
   return (

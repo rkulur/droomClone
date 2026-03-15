@@ -1,0 +1,136 @@
+{
+  "info": {
+    "_postman_id": "ef5559da-6aad-4450-af4e-e959ff07d245",
+    "name": "Droom Backend - Auth",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Postman Collection v2.1 for user registration, login, and profile APIs. These routes are mounted under /user."
+  },
+  "item": [
+    {
+      "name": "Register User",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"firstName\": \"Test\",\n  \"lastName\": \"User\",\n  \"email\": \"{{email}}\",\n  \"phoneNumber\": \"{{phoneNumber}}\",\n  \"role\": \"buyer\",\n  \"avatarUrl\": \"https://example.com/avatar.png\",\n  \"otpVerifiedToken\": \"{{otpVerifiedToken}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/user/register",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "user",
+            "register"
+          ]
+        },
+        "description": "Creates a new user. Requires an OTP verification token returned by POST /otp/verify with purpose=register."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('register returns success', function () {",
+              "  pm.expect(pm.response.code).to.be.oneOf([201, 409, 400]);",
+              "});",
+              "try {",
+              "  var json = pm.response.json();",
+              "  if (json.accessToken) {",
+              "    pm.environment.set('accessToken', json.accessToken);",
+              "  }",
+              "} catch (error) {}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Login User",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{email}}\",\n  \"otpVerifiedToken\": \"{{otpVerifiedToken}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/user/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "user",
+            "login"
+          ]
+        },
+        "description": "Logs in an existing user. Requires an OTP verification token returned by POST /otp/verify with purpose=login."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('login returns success', function () {",
+              "  pm.expect(pm.response.code).to.be.oneOf([200, 404, 400]);",
+              "});",
+              "try {",
+              "  var json = pm.response.json();",
+              "  if (json.accessToken) {",
+              "    pm.environment.set('accessToken', json.accessToken);",
+              "  }",
+              "} catch (error) {}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Get My Profile",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{accessToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/user/me",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "user",
+            "me"
+          ]
+        },
+        "description": "Fetches the authenticated user's profile. Requires Authorization: Bearer {{accessToken}}."
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    }
+  ]
+}

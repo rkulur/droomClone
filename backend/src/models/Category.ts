@@ -20,7 +20,6 @@ const categorySchema = new Schema(
   },
 );
 
-categorySchema.index({ slug: 1 }, { unique: true });
 categorySchema.index({ isActive: 1, sortOrder: 1 });
 categorySchema.index({ parentCategory: 1 });
 

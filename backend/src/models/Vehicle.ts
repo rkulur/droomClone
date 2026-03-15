@@ -6,9 +6,12 @@ const vehicleSchema = new Schema(
     description: { type: String },
     slug: { type: String, required: true, unique: true, trim: true },
     category: { type: Schema.Types.ObjectId, ref: "Category", required: true },
+    categoryNameSnapshot: { type: String, trim: true },
     brand: { type: Schema.Types.ObjectId, ref: "Brand", required: true },
+    brandNameSnapshot: { type: String, trim: true },
     model: { type: Schema.Types.ObjectId, ref: "VehicleModel", required: true },
     modelName: { type: String, trim: true },
+    modelNameSnapshot: { type: String, trim: true },
     variant: { type: String, trim: true },
     year: { type: Number, required: true },
     regNumber: { type: String, trim: true },
@@ -62,15 +65,15 @@ const vehicleSchema = new Schema(
             validator: (coords: number[]) => coords.length === 2,
             message: "Geo coordinates must be [longitude, latitude]",
           },
-          default: undefined,
         },
       },
     },
 
-    seller: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    seller: { type: Schema.Types.ObjectId, ref: "User" },
     sellerType: { type: String, enum: ["individual", "dealer"] },
     isVerifiedSeller: { type: Boolean, default: false },
     buyerSurety: { type: Boolean, default: false },
+    submittedByAdminId: { type: Schema.Types.ObjectId, ref: "User" },
 
     images: [
       {
@@ -78,6 +81,7 @@ const vehicleSchema = new Schema(
         thumbnailUrl: { type: String, trim: true },
         isPrimary: { type: Boolean, default: false },
         sortOrder: { type: Number, default: 0 },
+        storageKey: { type: String, trim: true },
       },
     ],
     videoUrl: { type: String, trim: true },
@@ -109,7 +113,16 @@ const vehicleSchema = new Schema(
 
     status: {
       type: String,
-      enum: ["draft", "pending_review", "active", "sold", "expired", "rejected"],
+      enum: [
+        "draft",
+        "pending_review",
+        "active",
+        "published",
+        "sold",
+        "expired",
+        "rejected",
+        "archived",
+      ],
       default: "draft",
     },
     rejectionReason: { type: String },
@@ -158,7 +171,6 @@ vehicleSchema.index({ brand: 1, model: 1 });
 vehicleSchema.index({ price: 1 });
 vehicleSchema.index({ "searchableFeatures.fuelType": 1 });
 vehicleSchema.index({ isFeatured: 1, isBoosted: 1, boostExpiresAt: 1 });
-vehicleSchema.index({ slug: 1 }, { unique: true });
 vehicleSchema.index({ status: 1, expiresAt: 1 });
 vehicleSchema.index({ title: "text", description: "text", tags: "text" });
 

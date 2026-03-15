@@ -57,8 +57,6 @@ const featureTemplateSchema = new Schema(
   },
 );
 
-featureTemplateSchema.index({ category: 1 }, { unique: true });
-
 const FeatureTemplate =
   (mongoose.models["FeatureTemplate"] as mongoose.Model<any>) ||
   mongoose.model("FeatureTemplate", featureTemplateSchema);

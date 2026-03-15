@@ -10,9 +10,11 @@ export interface ListingImage {
   thumbnailUrl: string;
   isPrimary: boolean;
   sortOrder: number;
+  storageKey?: string;
 }
 
 export interface ListingFeatureField {
+  key?: string;
   label: string;
   value: string;
   icon: string;
@@ -90,6 +92,7 @@ export interface ListingDraft {
 
 type ListingStore = ListingDraft & {
   setField: <K extends keyof ListingDraft>(key: K, value: ListingDraft[K]) => void;
+  replaceDraft: (draft: ListingDraft) => void;
   addImage: (img: Omit<ListingImage, "sortOrder"> & { sortOrder?: number }) => void;
   removeImage: (index: number) => void;
   setPrimaryImage: (index: number) => void;
@@ -174,6 +177,7 @@ export const useListingStore = create<ListingStore>()(
     (set) => ({
       ...initialDraft,
       setField: (key, value) => set(() => ({ [key]: value }) as Pick<ListingDraft, typeof key>),
+      replaceDraft: (draft) => set(() => ({ ...draft })),
       addImage: (img) =>
         set((state) => {
           if (state.images.length >= 20) {

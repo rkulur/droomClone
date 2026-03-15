@@ -20,7 +20,6 @@ const brandSchema = new Schema(
   },
 );
 
-brandSchema.index({ slug: 1 }, { unique: true });
 brandSchema.index({ categories: 1, isPopular: 1 });
 
 const Brand =

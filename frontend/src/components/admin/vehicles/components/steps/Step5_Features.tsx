@@ -6,20 +6,34 @@ import { format } from "date-fns";
 import { CalendarIcon, Loader2 } from "lucide-react";
 import { useEffect } from "react";
 import useSWR from "swr";
+import { toast } from "sonner";
 import DynamicFeatureField from "../fields/DynamicFeatureField";
 import FormSection from "../FormSection";
 import TagInput from "../fields/TagInput";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../../../../ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "../../../../ui/card";
 import { Button } from "../../../../ui/button";
 import { Textarea } from "../../../../ui/textarea";
 import { Input } from "../../../../ui/input";
 import { Switch } from "../../../../ui/switch";
 import { Checkbox } from "../../../../ui/checkbox";
-import { Popover, PopoverContent, PopoverTrigger } from "../../../../ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "../../../../ui/popover";
 import { Calendar } from "../../../../ui/calendar";
 import { Skeleton } from "../../../../ui/skeleton";
 import { cn } from "../../../../../lib/utils";
 import { useListingStore } from "../../../../../stores/useListingStore";
+import { fetchJson, getErrorMessage } from "../../api/client";
+import { adminVehicleApi } from "../../api/endpoints";
 
 type FeatureTemplateField = {
   key: string;
@@ -49,14 +63,6 @@ const listingPlanTiles = [
   ["platinum", "Spotlight - all features"],
 ] as const;
 
-const fetcher = async (url: string) => {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error("Failed to fetch feature templates");
-  }
-  return response.json();
-};
-
 const Step5_Features = () => {
   const categoryId = useListingStore((state) => state.categoryId);
   const categoryLabel = useListingStore((state) => state.categoryId);
@@ -68,7 +74,9 @@ const Step5_Features = () => {
   const locationState = useListingStore((state) => state.locationState);
 
   const featureSections = useListingStore((state) => state.featureSections);
-  const searchableFeatures = useListingStore((state) => state.searchableFeatures);
+  const searchableFeatures = useListingStore(
+    (state) => state.searchableFeatures,
+  );
   const inspected = useListingStore((state) => state.inspected);
   const inspectedBy = useListingStore((state) => state.inspectedBy);
   const inspectionScore = useListingStore((state) => state.inspectionScore);
@@ -82,38 +90,53 @@ const Step5_Features = () => {
   const metaDescription = useListingStore((state) => state.metaDescription);
 
   const setField = useListingStore((state) => state.setField);
-  const setFeatureSections = useListingStore((state) => state.setFeatureSections);
-  const setSearchableFeature = useListingStore((state) => state.setSearchableFeature);
+  const setFeatureSections = useListingStore(
+    (state) => state.setFeatureSections,
+  );
+  const setSearchableFeature = useListingStore(
+    (state) => state.setSearchableFeature,
+  );
 
-  const { data, isLoading } = useSWR(
-    categoryId ? `/api/feature-templates?category=${categoryId}` : null,
-    fetcher
+  const { data, error, isLoading } = useSWR(
+    categoryId ? adminVehicleApi.featureTemplates(categoryId) : null,
+    fetchJson<FeatureTemplateSection[]>,
   );
 
   useEffect(() => {
-    const templateSections = (data?.data ?? data ?? []) as FeatureTemplateSection[];
+    if (!error) {
+      return;
+    }
+
+    toast.error(getErrorMessage(error, "Failed to fetch feature templates"));
+  }, [error]);
+
+  useEffect(() => {
+    const templateSections = (data ?? []) as FeatureTemplateSection[];
     if (templateSections.length > 0 && featureSections.length === 0) {
       setFeatureSections(
         templateSections.map((section) => ({
           sectionTitle: section.sectionTitle,
           sortOrder: section.sortOrder,
           fields: section.fields.map((field) => ({
+            key: field.key,
             label: field.label,
             value: "",
             icon: "",
             isHighlighted: Boolean(field.isHighlighted),
           })),
-        }))
+        })),
       );
     }
   }, [data, featureSections.length, setFeatureSections]);
 
-  const templateSections = (data?.data ?? data ?? []) as FeatureTemplateSection[];
+  const templateSections = (data ?? []) as FeatureTemplateSection[];
 
   if (!categoryId) {
     return (
       <FormSection title="Features">
-        <p className="text-sm text-muted-foreground">Go back to Step 1 and choose a category first.</p>
+        <p className="text-sm text-muted-foreground">
+          Go back to Step 1 and choose a category first.
+        </p>
       </FormSection>
     );
   }
@@ -151,14 +174,22 @@ const Step5_Features = () => {
             <div>
               <p className="text-sm font-medium">Inspected</p>
             </div>
-            <Switch checked={inspected} onCheckedChange={(checked) => setField("inspected", checked)} />
+            <Switch
+              checked={inspected}
+              onCheckedChange={(checked) => setField("inspected", checked)}
+            />
           </div>
 
           {inspected ? (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3 sm:col-span-2">
               <div>
                 <label className="text-sm font-medium">Inspected By</label>
-                <Input value={inspectedBy} onChange={(event) => setField("inspectedBy", event.target.value)} />
+                <Input
+                  value={inspectedBy}
+                  onChange={(event) =>
+                    setField("inspectedBy", event.target.value)
+                  }
+                />
               </div>
               <div>
                 <label className="text-sm font-medium">Score</label>
@@ -169,7 +200,10 @@ const Step5_Features = () => {
                     value={inspectionScore ?? ""}
                     onChange={(event) => {
                       const parsed = Number.parseInt(event.target.value, 10);
-                      setField("inspectionScore", Number.isNaN(parsed) ? null : parsed);
+                      setField(
+                        "inspectionScore",
+                        Number.isNaN(parsed) ? null : parsed,
+                      );
                     }}
                   />
                   <span className="flex items-center px-3 bg-muted border border-l-0 border-input rounded-r-md text-sm text-muted-foreground">
@@ -181,16 +215,29 @@ const Step5_Features = () => {
                 <label className="text-sm font-medium">Date</label>
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" type="button" className="w-full justify-start">
+                    <Button
+                      variant="outline"
+                      type="button"
+                      className="w-full justify-start"
+                    >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {inspectionDate ? format(new Date(inspectionDate), "PPP") : "Pick date"}
+                      {inspectionDate
+                        ? format(new Date(inspectionDate), "PPP")
+                        : "Pick date"}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0">
                     <Calendar
                       mode="single"
-                      selected={inspectionDate ? new Date(inspectionDate) : undefined}
-                      onSelect={(date) => setField("inspectionDate", date ? date.toISOString() : null)}
+                      selected={
+                        inspectionDate ? new Date(inspectionDate) : undefined
+                      }
+                      onSelect={(date) =>
+                        setField(
+                          "inspectionDate",
+                          date ? date.toISOString() : null,
+                        )
+                      }
                     />
                   </PopoverContent>
                 </Popover>
@@ -199,21 +246,38 @@ const Step5_Features = () => {
           ) : null}
 
           <div className="flex items-center gap-3">
-            <Checkbox checked={rcVerified} onCheckedChange={(checked) => setField("rcVerified", Boolean(checked))} />
+            <Checkbox
+              checked={rcVerified}
+              onCheckedChange={(checked) =>
+                setField("rcVerified", Boolean(checked))
+              }
+            />
             <label className="text-sm">Registration Certificate Verified</label>
           </div>
 
           <div className="flex items-center gap-3">
-            <Checkbox checked={challanClear} onCheckedChange={(checked) => setField("challanClear", Boolean(checked))} />
+            <Checkbox
+              checked={challanClear}
+              onCheckedChange={(checked) =>
+                setField("challanClear", Boolean(checked))
+              }
+            />
             <label className="text-sm">No Pending Traffic Challans</label>
           </div>
 
           <div className="flex items-center justify-between rounded-md border border-border p-3">
             <div>
-              <p className="text-sm font-medium">Offer Buyer Surety Protection</p>
-              <p className="text-xs text-muted-foreground">Eligible sellers only. Shows a trust badge.</p>
+              <p className="text-sm font-medium">
+                Offer Buyer Surety Protection
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Eligible sellers only. Shows a trust badge.
+              </p>
             </div>
-            <Switch checked={buyerSurety} onCheckedChange={(checked) => setField("buyerSurety", checked)} />
+            <Switch
+              checked={buyerSurety}
+              onCheckedChange={(checked) => setField("buyerSurety", checked)}
+            />
           </div>
         </div>
       </FormSection>
@@ -228,7 +292,7 @@ const Step5_Features = () => {
                   "flex flex-col p-4 rounded-lg border-2 cursor-pointer transition-colors",
                   listingPlan === value
                     ? "border-primary bg-primary/5"
-                    : "border-border hover:border-muted-foreground/40"
+                    : "border-border hover:border-muted-foreground/40",
                 )}
               >
                 <input
@@ -240,7 +304,9 @@ const Step5_Features = () => {
                   onChange={() => setField("listingPlan", value)}
                 />
                 <span className="text-sm font-medium capitalize">{value}</span>
-                <span className="text-xs text-muted-foreground mt-0.5">{desc}</span>
+                <span className="text-xs text-muted-foreground mt-0.5">
+                  {desc}
+                </span>
               </label>
             ))}
           </div>
@@ -260,7 +326,9 @@ const Step5_Features = () => {
           <div>
             <div className="flex justify-between items-baseline">
               <label className="text-sm font-medium">SEO Title</label>
-              <span className="text-xs text-muted-foreground">{metaTitle.length}/70</span>
+              <span className="text-xs text-muted-foreground">
+                {metaTitle.length}/70
+              </span>
             </div>
             <Input
               maxLength={70}
@@ -272,22 +340,30 @@ const Step5_Features = () => {
           <div>
             <div className="flex justify-between items-baseline">
               <label className="text-sm font-medium">SEO Description</label>
-              <span className="text-xs text-muted-foreground">{metaDescription.length}/160</span>
+              <span className="text-xs text-muted-foreground">
+                {metaDescription.length}/160
+              </span>
             </div>
             <Textarea
               rows={2}
               maxLength={160}
               value={metaDescription}
-              onChange={(event) => setField("metaDescription", event.target.value)}
+              onChange={(event) =>
+                setField("metaDescription", event.target.value)
+              }
             />
           </div>
         </div>
       </FormSection>
 
-      <Card className="bg-muted/50 border border-dashed mt-6">
+      <Card className="bg-muted/50 border border-dashed mt-6 bg-white">
         <CardHeader>
-          <CardTitle className="text-base font-semibold">Ready to publish?</CardTitle>
-          <CardDescription>Reviewed before going live - usually within 2 hours.</CardDescription>
+          <CardTitle className="text-base font-semibold">
+            Ready to publish?
+          </CardTitle>
+          <CardDescription>
+            Reviewed before going live - usually within 2 hours.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {[
@@ -296,9 +372,15 @@ const Step5_Features = () => {
             ["Model", modelLabel],
             ["Year", year ? String(year) : ""],
             ["Price", price ? `₹ ${price.toLocaleString("en-IN")}` : ""],
-            ["Location", `${locationCity}${locationCity && locationState ? ", " : ""}${locationState}`],
+            [
+              "Location",
+              `${locationCity}${locationCity && locationState ? ", " : ""}${locationState}`,
+            ],
           ].map(([label, value]) => (
-            <div key={label} className="flex justify-between text-sm py-2 border-b border-border last:border-0">
+            <div
+              key={label}
+              className="flex justify-between text-sm py-2 border-b border-border last:border-0"
+            >
               <span className="text-muted-foreground">{label}</span>
               <span className="font-medium">{value || "—"}</span>
             </div>
@@ -308,7 +390,9 @@ const Step5_Features = () => {
           <Button
             size="lg"
             className="w-full"
-            onClick={() => window.dispatchEvent(new CustomEvent("listing-publish"))}
+            onClick={() =>
+              window.dispatchEvent(new CustomEvent("listing-publish"))
+            }
           >
             <Loader2 className="mr-2 h-4 w-4 hidden animate-spin" />
             Publish Listing

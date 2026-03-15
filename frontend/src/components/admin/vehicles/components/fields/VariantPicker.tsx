@@ -2,9 +2,10 @@
 // Admin route: <Route path="/admin" element={canAccessAdmin ? <AdminPage /> : <Navigate to="/" replace />} />
 // Admin component: src/components/admin/index.tsx
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
 import useSWR from "swr";
+import { toast } from "sonner";
 import { Button } from "../../../../ui/button";
 import {
   Command,
@@ -18,6 +19,9 @@ import { Input } from "../../../../ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "../../../../ui/popover";
 import { Skeleton } from "../../../../ui/skeleton";
 import { cn } from "../../../../../lib/utils";
+import { fetchJson, getErrorMessage } from "../../api/client";
+import { adminVehicleApi } from "../../api/endpoints";
+import { getMockModelById } from "../../data/mockVehicleCatalog";
 
 type Variant = {
   name: string;
@@ -31,22 +35,25 @@ type VariantPickerProps = {
   disabled: boolean;
 };
 
-const fetcher = async (url: string) => {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error("Failed to fetch model details");
-  }
-  return response.json();
-};
-
 const VariantPicker = ({ value, onChange, modelId, disabled }: VariantPickerProps) => {
   const [open, setOpen] = useState(false);
-  const { data, error, isLoading } = useSWR(modelId ? `/api/models/${modelId}` : null, fetcher);
+  const { data, error, isLoading } = useSWR(
+    modelId ? adminVehicleApi.modelDetails(modelId) : null,
+    fetchJson<{ variants?: Variant[] }>
+  );
+
+  useEffect(() => {
+    if (!error) {
+      return;
+    }
+
+    toast.error(getErrorMessage(error, "Failed to fetch model details"));
+  }, [error]);
 
   const variants = useMemo(() => {
-    const raw = ((data?.data ?? data)?.variants ?? []) as Variant[];
+    const raw = ((data ?? getMockModelById(modelId))?.variants ?? []) as Variant[];
     return raw;
-  }, [data]);
+  }, [data, modelId]);
 
   if (!modelId) {
     return (
@@ -61,16 +68,6 @@ const VariantPicker = ({ value, onChange, modelId, disabled }: VariantPickerProp
 
   if (isLoading) {
     return <Skeleton className="h-10 w-full rounded-md" />;
-  }
-
-  if (error) {
-    return (
-      <Input
-        placeholder="e.g. VXI, ZXI+"
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-      />
-    );
   }
 
   if (variants.length === 0) {
@@ -101,7 +98,7 @@ const VariantPicker = ({ value, onChange, modelId, disabled }: VariantPickerProp
       <PopoverContent className="w-full p-0">
         <Command>
           <CommandInput placeholder="Search variants…" />
-          <CommandEmpty>No variant found.</CommandEmpty>
+          <CommandEmpty>{error ? "Using mock variants." : "No variant found."}</CommandEmpty>
           <CommandList>
             <CommandGroup>
               {variants.map((item) => (

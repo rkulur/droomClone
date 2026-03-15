@@ -4,10 +4,16 @@
 
 import { FileText, Star, UploadCloud, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { Badge } from "../../../../ui/badge";
 import { Input } from "../../../../ui/input";
 import { cn } from "../../../../../lib/utils";
 import { useListingStore } from "../../../../../stores/useListingStore";
+import {
+  getErrorMessage,
+  uploadInspectionReport,
+  uploadListingImages,
+} from "../../api/client";
 import FormSection from "../FormSection";
 
 const MAX_SIZE_BYTES = 10 * 1024 * 1024;
@@ -18,6 +24,8 @@ const Step4_Media = () => {
 
   const [isDragging, setIsDragging] = useState(false);
   const [hasValidated, setHasValidated] = useState(false);
+  const [isUploadingImages, setIsUploadingImages] = useState(false);
+  const [isUploadingReport, setIsUploadingReport] = useState(false);
 
   const images = useListingStore((state) => state.images);
   const videoUrl = useListingStore((state) => state.videoUrl);
@@ -28,16 +36,8 @@ const Step4_Media = () => {
   const setPrimaryImage = useListingStore((state) => state.setPrimaryImage);
   const setField = useListingStore((state) => state.setField);
 
-  const processFiles = (files: FileList | File[]) => {
-    Array.from(files).forEach((file) => {
-      if (file.size > MAX_SIZE_BYTES) {
-        return;
-      }
-
-      if (!["image/jpeg", "image/png"].includes(file.type)) {
-        return;
-      }
-
+  const addLocalPreviewImages = (files: File[]) => {
+    files.forEach((file) => {
       const url = URL.createObjectURL(file);
       addImage({
         url,
@@ -47,29 +47,76 @@ const Step4_Media = () => {
     });
   };
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files?.length) {
-      processFiles(event.target.files);
+  const processFiles = async (files: FileList | File[]) => {
+    const validFiles = Array.from(files).filter((file) => {
+      if (file.size > MAX_SIZE_BYTES) {
+        return false;
+      }
+
+      return ["image/jpeg", "image/png"].includes(file.type);
+    });
+
+    if (validFiles.length === 0) {
+      toast.error("Only JPEG or PNG images up to 10 MB are allowed");
+      return;
+    }
+
+    setIsUploadingImages(true);
+
+    try {
+      const uploadedImages = await uploadListingImages(validFiles);
+
+      uploadedImages.forEach((image) => {
+        addImage({
+          url: image.url,
+          thumbnailUrl: image.thumbnailUrl,
+          storageKey: image.storageKey,
+          isPrimary: images.length === 0,
+        });
+      });
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Failed to upload images"));
+      addLocalPreviewImages(validFiles);
+    } finally {
+      setIsUploadingImages(false);
     }
   };
 
-  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files?.length) {
+      await processFiles(event.target.files);
+      event.target.value = "";
+    }
+  };
+
+  const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     setIsDragging(false);
 
     if (event.dataTransfer.files?.length) {
-      processFiles(event.dataTransfer.files);
+      await processFiles(event.dataTransfer.files);
     }
   };
 
-  const handleReportSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleReportSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files?.length) {
       return;
     }
 
     const file = event.target.files[0];
-    const url = URL.createObjectURL(file);
-    setField("inspectionReportUrl", url);
+    setIsUploadingReport(true);
+
+    try {
+      const uploadedReport = await uploadInspectionReport(file);
+      setField("inspectionReportUrl", uploadedReport.url);
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Failed to upload inspection report"));
+      const url = URL.createObjectURL(file);
+      setField("inspectionReportUrl", url);
+    } finally {
+      setIsUploadingReport(false);
+      event.target.value = "";
+    }
   };
 
   useEffect(() => {
@@ -101,7 +148,9 @@ const Step4_Media = () => {
           onDrop={handleDrop}
         >
           <UploadCloud className="mx-auto h-10 w-10 text-muted-foreground mb-3" />
-          <p className="text-sm font-medium">Drag photos here or click to upload</p>
+          <p className="text-sm font-medium">
+            {isUploadingImages ? "Uploading photos..." : "Drag photos here or click to upload"}
+          </p>
           <p className="text-xs text-muted-foreground mt-1">JPEG or PNG - Max 10 MB - Up to 20 photos</p>
         </div>
         <input
@@ -187,7 +236,9 @@ const Step4_Media = () => {
               onClick={() => reportInputRef.current?.click()}
             >
               <FileText className="mx-auto h-6 w-6 text-muted-foreground mb-2" />
-              <p className="text-sm text-muted-foreground">Upload inspection report (PDF or image)</p>
+              <p className="text-sm text-muted-foreground">
+                {isUploadingReport ? "Uploading inspection report..." : "Upload inspection report (PDF or image)"}
+              </p>
             </div>
             <input
               ref={reportInputRef}

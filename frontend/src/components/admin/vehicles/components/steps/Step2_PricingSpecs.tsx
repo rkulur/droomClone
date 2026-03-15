@@ -7,6 +7,7 @@ import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { Badge } from "../../../../ui/badge";
 import { Button } from "../../../../ui/button";
 import { Calendar } from "../../../../ui/calendar";
@@ -26,6 +27,8 @@ import { useListingStore } from "../../../../../stores/useListingStore";
 import FieldError from "../FieldError";
 import FormSection from "../FormSection";
 import { step2Schema } from "../../new/listingSchema";
+
+type Step2Values = z.input<typeof step2Schema>;
 
 const rtoStates = [
   ["AP", "Andhra Pradesh"],
@@ -93,17 +96,17 @@ const Step2_PricingSpecs = () => {
   const insuranceExpiry = useListingStore((state) => state.insuranceExpiry);
   const hypothecation = useListingStore((state) => state.hypothecation);
 
-  const form = useForm({
+  const form = useForm<Step2Values>({
     resolver: zodResolver(step2Schema),
     mode: "onBlur",
     defaultValues: {
-      price,
+      price: price ?? undefined,
       isNegotiable,
-      fuelType,
-      transmission,
-      kmsDriven,
-      ownership,
-      condition,
+      fuelType: fuelType as Step2Values["fuelType"],
+      transmission: transmission as Step2Values["transmission"],
+      kmsDriven: kmsDriven ?? undefined,
+      ownership: ownership as Step2Values["ownership"],
+      condition: condition as Step2Values["condition"],
       color,
       rtoState,
     },
@@ -139,7 +142,13 @@ const Step2_PricingSpecs = () => {
                   const parsed = Number.parseInt(event.target.value, 10);
                   const nextValue = Number.isNaN(parsed) ? null : parsed;
                   setField("price", nextValue);
-                  form.setValue("price", nextValue, { shouldValidate: true });
+                  form.setValue(
+                    "price",
+                    (nextValue ?? undefined) as Step2Values["price"],
+                    {
+                      shouldValidate: true,
+                    },
+                  );
                 }}
               />
             </div>
@@ -240,7 +249,9 @@ const Step2_PricingSpecs = () => {
               value={fuelType}
               onValueChange={(value) => {
                 setField("fuelType", value);
-                form.setValue("fuelType", value, { shouldValidate: true });
+                form.setValue("fuelType", value as Step2Values["fuelType"], {
+                  shouldValidate: true,
+                });
               }}
             >
               <SelectTrigger>
@@ -264,7 +275,11 @@ const Step2_PricingSpecs = () => {
               value={transmission}
               onValueChange={(value) => {
                 setField("transmission", value);
-                form.setValue("transmission", value, { shouldValidate: true });
+                form.setValue(
+                  "transmission",
+                  value as Step2Values["transmission"],
+                  { shouldValidate: true },
+                );
               }}
             >
               <SelectTrigger>
@@ -294,7 +309,13 @@ const Step2_PricingSpecs = () => {
                   const parsed = Number.parseInt(event.target.value, 10);
                   const nextValue = Number.isNaN(parsed) ? null : parsed;
                   setField("kmsDriven", nextValue);
-                  form.setValue("kmsDriven", nextValue, { shouldValidate: true });
+                  form.setValue(
+                    "kmsDriven",
+                    (nextValue ?? undefined) as Step2Values["kmsDriven"],
+                    {
+                      shouldValidate: true,
+                    },
+                  );
                 }}
               />
               <span className="flex items-center px-3 bg-muted border border-l-0 border-input rounded-r-md text-sm text-muted-foreground">
@@ -310,7 +331,9 @@ const Step2_PricingSpecs = () => {
               value={ownership}
               onValueChange={(value) => {
                 setField("ownership", value);
-                form.setValue("ownership", value, { shouldValidate: true });
+                form.setValue("ownership", value as Step2Values["ownership"], {
+                  shouldValidate: true,
+                });
               }}
             >
               <SelectTrigger>
@@ -385,7 +408,9 @@ const Step2_PricingSpecs = () => {
                   checked={condition === value}
                   onChange={() => {
                     setField("condition", value);
-                    form.setValue("condition", value, { shouldValidate: true });
+                form.setValue("condition", value as Step2Values["condition"], {
+                  shouldValidate: true,
+                });
                   }}
                 />
                 <span className="text-sm font-medium">{title}</span>

@@ -1,5 +1,12 @@
 import express from "express";
-import { captchaRouter, otpRouter, userRouter } from "./routes";
+import path from "path";
+import {
+  adminVehicleRouter,
+  captchaRouter,
+  catalogRouter,
+  otpRouter,
+  userRouter,
+} from "./routes";
 import cors from "cors";
 
 const app = express();
@@ -14,8 +21,11 @@ app.use(
   }),
 );
 
+app.use("/uploads", express.static(path.join("/tmp", "droom-admin-uploads")));
 app.use("/user", userRouter);
 app.use("/captcha", captchaRouter);
 app.use("/otp", otpRouter);
+app.use("/api", catalogRouter);
+app.use("/api", adminVehicleRouter);
 
 export { app };

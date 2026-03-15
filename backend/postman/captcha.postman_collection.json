@@ -1,0 +1,92 @@
+{
+  "info": {
+    "_postman_id": "ca8a5d8d-6784-4544-a843-cbe260ea85b3",
+    "name": "Droom Backend - Captcha",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Postman Collection v2.1 for captcha APIs. These routes are mounted under /captcha."
+  },
+  "item": [
+    {
+      "name": "Get Captcha",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/captcha",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "captcha"
+          ]
+        },
+        "description": "Returns a generated captcha payload with captchaId and captchaSvg. This backend logs the actual captcha text to the server console, so copy captchaId from the response and captchaText from the backend logs into the environment before verifying."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "try {",
+              "  var json = pm.response.json();",
+              "  if (json.captchaId) {",
+              "    pm.environment.set('captchaId', json.captchaId);",
+              "  }",
+              "} catch (error) {}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Verify Captcha",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"captchaId\": \"{{captchaId}}\",\n  \"captchaText\": \"{{captchaText}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/captcha/verify",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "captcha",
+            "verify"
+          ]
+        },
+        "description": "Verifies the captcha answer and returns captchaToken, which is required by POST /otp as captchaVerifiedToken."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "try {",
+              "  var json = pm.response.json();",
+              "  if (json.captchaToken) {",
+              "    pm.environment.set('captchaVerifiedToken', json.captchaToken);",
+              "  }",
+              "} catch (error) {}"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    }
+  ]
+}

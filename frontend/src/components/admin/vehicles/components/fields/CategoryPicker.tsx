@@ -2,9 +2,10 @@
 // Admin route: <Route path="/admin" element={canAccessAdmin ? <AdminPage /> : <Navigate to="/" replace />} />
 // Admin component: src/components/admin/index.tsx
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
 import useSWR from "swr";
+import { toast } from "sonner";
 import { Button } from "../../../../ui/button";
 import {
   Command,
@@ -14,9 +15,15 @@ import {
   CommandItem,
   CommandList,
 } from "../../../../ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "../../../../ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "../../../../ui/popover";
 import { Skeleton } from "../../../../ui/skeleton";
 import { cn } from "../../../../../lib/utils";
+import { fetchJson, getErrorMessage } from "../../api/client";
+import { adminVehicleApi } from "../../api/endpoints";
 
 type Category = {
   _id?: string;
@@ -30,20 +37,23 @@ type CategoryPickerProps = {
   onChange: (id: string) => void;
 };
 
-const fetcher = async (url: string) => {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error("Failed to fetch categories");
-  }
-  return response.json();
-};
-
 const CategoryPicker = ({ value, onChange }: CategoryPickerProps) => {
   const [open, setOpen] = useState(false);
-  const { data, error, isLoading } = useSWR("/api/categories?isActive=true", fetcher);
+  const { data, error, isLoading } = useSWR(
+    adminVehicleApi.categories,
+    fetchJson<Category[]>,
+  );
+
+  useEffect(() => {
+    if (!error) {
+      return;
+    }
+
+    toast.error(getErrorMessage(error, "Failed to fetch categories"));
+  }, [error]);
 
   const items = useMemo(() => {
-    const raw = (data?.data ?? data ?? []) as Category[];
+    const raw = (data ?? []) as Category[];
     return raw.map((item) => ({
       id: item._id ?? item.id ?? "",
       label: item.name,
@@ -55,14 +65,6 @@ const CategoryPicker = ({ value, onChange }: CategoryPickerProps) => {
 
   if (isLoading) {
     return <Skeleton className="h-10 w-full rounded-md" />;
-  }
-
-  if (error) {
-    return (
-      <Button variant="outline" className="w-full justify-between" disabled type="button">
-        Failed to load categories
-      </Button>
-    );
   }
 
   return (
@@ -99,12 +101,16 @@ const CategoryPicker = ({ value, onChange }: CategoryPickerProps) => {
                   }}
                 >
                   {item.iconUrl ? (
-                    <img src={item.iconUrl} alt={item.label} className="mr-2 h-4 w-4" />
+                    <img
+                      src={item.iconUrl}
+                      alt={item.label}
+                      className="mr-2 h-4 w-4"
+                    />
                   ) : null}
                   <Check
                     className={cn(
                       "mr-2 h-4 w-4",
-                      value === item.id ? "opacity-100" : "opacity-0"
+                      value === item.id ? "opacity-100" : "opacity-0",
                     )}
                   />
                   {item.label}
