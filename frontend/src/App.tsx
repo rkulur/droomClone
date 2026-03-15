@@ -7,6 +7,7 @@ import Header from "./components/header";
 import Home from "./components/home";
 import Login from "./components/Login";
 import VehicleListingPage from "./pages/vehicles/VehicleListingPage";
+import VehicleDetailPage from "./pages/vehicles/VehicleDetailPage";
 import Signup from "./components/signup";
 import { useAuth } from "./context/AuthContext";
 
@@ -22,9 +23,10 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/vehicles/:category" element={<VehicleListingPage />} />
           <Route
-            path="/vehicles/:category/:subcategory"
+            path="/vehicles/:category/subcategory/:subcategory"
             element={<VehicleListingPage />}
           />
+          <Route path="/vehicles/:category/:id" element={<VehicleDetailPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/account-signup" element={<Signup />} />
           <Route

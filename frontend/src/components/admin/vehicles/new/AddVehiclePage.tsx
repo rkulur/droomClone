@@ -151,11 +151,6 @@ const AddVehiclePage = () => {
 
     const buildPayload = (): CreateVehiclePayload => {
       const draft = useListingStore.getState();
-      const hasGeoCoordinates =
-        typeof draft.locationLng === "number" &&
-        Number.isFinite(draft.locationLng) &&
-        typeof draft.locationLat === "number" &&
-        Number.isFinite(draft.locationLat);
       const featureSections = draft.featureSections
         .map((section) => ({
           sectionTitle: section.sectionTitle,

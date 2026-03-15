@@ -61,7 +61,8 @@ const VehicleListingPage = () => {
   const location = useLocation();
 
   const category = normalizeSlug(rawCategory);
-  const subcategory = normalizeSlug(rawSubcategory) || undefined;
+  const subcategoryFromQuery = normalizeSlug(new URLSearchParams(location.search).get("subcategory") ?? undefined);
+  const subcategory = subcategoryFromQuery || normalizeSlug(rawSubcategory) || undefined;
   const [uiFilters, setUiFilters] = useState<ListingFilters>(() => parseFilters(location.search));
   const [debouncedFilters, setDebouncedFilters] = useState<ListingFilters>(() => parseFilters(location.search));
 
@@ -122,13 +123,18 @@ const VehicleListingPage = () => {
   }, [category, filterMetadata?.availableSubcategories, location.search, navigate, subcategory]);
 
   const syncUrl = (nextFilters: ListingFilters, nextSubcategory?: string) => {
-    const search = filtersToSearch(nextFilters);
+    const params = new URLSearchParams(filtersToSearch(nextFilters));
+
+    if (nextSubcategory) {
+      params.set("subcategory", nextSubcategory);
+    } else {
+      params.delete("subcategory");
+    }
+
     navigate(
       {
-        pathname: nextSubcategory
-          ? `/vehicles/${category}/${nextSubcategory}`
-          : `/vehicles/${category}`,
-        search: search ? `?${search}` : "",
+        pathname: `/vehicles/${category}`,
+        search: params.toString() ? `?${params.toString()}` : "",
       },
       { replace: true },
     );
