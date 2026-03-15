@@ -9,6 +9,9 @@ const ShopByBrand = () => {
   type BrandType = (typeof brandType)[number];
   const [selectedBrandType, setSelectedBrandType] = useState<BrandType>("Car");
   const [brandsList, setBrandsList] = useState<Brand[]>(carBrands);
+  const getCategorySlug = (type: BrandType) => type.toLowerCase();
+  const getBrandLink = (brand: Brand) =>
+    `/vehicles/${getCategorySlug(selectedBrandType)}?brand=${brand.link.split("/").pop()}`;
 
   return (
     <div className="px-horizontal pb-12 bg-white">
@@ -38,7 +41,7 @@ const ShopByBrand = () => {
       <div className="flex flex-wrap justify-center">
         {brandsList.map((brand, idx) => (
           <Link
-            to={brand.link}
+            to={getBrandLink(brand)}
             className="w-24 h-24 m-4 flex items-center justify-center hover:scale-110 transition-all"
             key={idx}
           >

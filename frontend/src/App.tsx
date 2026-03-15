@@ -6,6 +6,7 @@ import Footer from "./components/footer";
 import Header from "./components/header";
 import Home from "./components/home";
 import Login from "./components/Login";
+import VehicleListingPage from "./pages/vehicles/VehicleListingPage";
 import Signup from "./components/signup";
 import { useAuth } from "./context/AuthContext";
 
@@ -19,6 +20,11 @@ function App() {
         <Header />
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/vehicles/:category" element={<VehicleListingPage />} />
+          <Route
+            path="/vehicles/:category/:subcategory"
+            element={<VehicleListingPage />}
+          />
           <Route path="/login" element={<Login />} />
           <Route path="/account-signup" element={<Signup />} />
           <Route
