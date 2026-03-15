@@ -6,6 +6,7 @@ import Footer from "./components/footer";
 import Header from "./components/header";
 import Home from "./components/home";
 import Login from "./components/Login";
+import CartSummaryPage from "./pages/CartSummaryPage";
 import VehicleListingPage from "./pages/vehicles/VehicleListingPage";
 import VehicleDetailPage from "./pages/vehicles/VehicleDetailPage";
 import Signup from "./components/signup";
@@ -21,6 +22,7 @@ function App() {
         <Header />
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/cart-summary" element={<CartSummaryPage />} />
           <Route path="/vehicles/:category" element={<VehicleListingPage />} />
           <Route
             path="/vehicles/:category/subcategory/:subcategory"
