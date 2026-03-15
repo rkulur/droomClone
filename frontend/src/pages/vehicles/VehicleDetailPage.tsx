@@ -1,5 +1,6 @@
 import { Link, useParams } from "react-router"
 import { AlertCircle } from "lucide-react"
+import AddToCartButton from "@/components/vehicleDetail/AddToCartButton"
 import DetailBreadcrumb from "@/components/vehicleDetail/DetailBreadcrumb"
 import DetailPageSkeleton from "@/components/vehicleDetail/DetailPageSkeleton"
 import VehicleDescriptionBlock from "@/components/vehicleDetail/VehicleDescriptionBlock"
@@ -91,6 +92,9 @@ const VehicleDetailPage = () => {
                 <p className="mt-1 text-sm text-gray-500">
                   {vehicle.emiFrom ? `EMI from ₹${formatCurrency(vehicle.emiFrom)}` : "EMI not available"}
                 </p>
+                <div className="mt-4">
+                  <AddToCartButton vehicle={vehicle} />
+                </div>
               </div>
             </CardContent>
           </Card>
